@@ -63,14 +63,6 @@ python main.py run
 
 ---
 
-## Notes
-
-- Do not commit API keys or webhooks
-- Use LAN URL instead of localhost for team access
-- Deleting `state.json` resets history
-
----
-
 ## Summary
 
 Smart triage layer for MISP to reduce noise and highlight meaningful changes.
