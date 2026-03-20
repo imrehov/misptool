@@ -27,7 +27,6 @@ scoring:
     botnet: 2
     exploit: 2
     credential: 2
-    hotdog: 1000
 
   threat_level_scores:
     "1": 3
