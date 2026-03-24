@@ -61,6 +61,39 @@ python main.py <command>
 python main.py run
 ```
 
+
+## Importing clusters
+
+When importing a single `.json` file, run `python main.py import-cluster filename.json`.
+when importing `.json` files from a folder, run `python main.py import-all folder/`.
+
+## Accepted cluster format
+
+Mandatory fields:
+- value
+- type
+- description
+
+```json
+{
+    "value": "cluster_name",
+    "type": "galaxy_type",
+    "source": "source",
+    "authors": "authors",
+    "description": "cluster_description",
+    "distribution": 3, _1 is org only, 2 for connected, 3 all communities
+    "GalaxyElement": [
+        {
+            "key": "Any useful information",
+            "value": "about the cluster"
+        },
+        {
+            "key": "Example: Primary Target",
+            "value": "Example: Antarctica"
+        }
+    ]
+}
+```
 ---
 
 ## Summary
