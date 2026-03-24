@@ -64,6 +64,8 @@ dist/
 *.egg-info/
 .eggs/
 backstories/
+ls26campaigns/
+ls26tas/
 
 # =========================
 # Jupyter (if ever used)
