@@ -65,9 +65,10 @@ python main.py run
 ## Importing clusters
 
 When importing a single `.json` file, run `python main.py import-cluster filename.json`.
-when importing `.json` files from a folder, run `python main.py import-all folder/`.
 
-## Accepted cluster format
+When importing `.json` files from a folder, run `python main.py import-all folder/`.
+
+### Accepted cluster format
 
 Mandatory fields:
 - value
