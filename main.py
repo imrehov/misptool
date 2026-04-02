@@ -132,6 +132,26 @@ def main() -> None:
         help="Ensure required galaxies exist",
     )
 
+    export_parser = subparsers.add_parser(
+    "export-events",
+    help="Export events to JSON for offline study",
+    )
+    export_parser.add_argument(
+        "--output",
+        default="exports/events.json",
+        help="Output JSON file path",
+    )
+    export_parser.add_argument(
+        "--recent",
+        action="store_true",
+        help="Export only recent events using lookback_minutes from config",
+    )
+    export_parser.add_argument(
+        "--with-attachments",
+        action="store_true",
+        help="Also dump attachment/sample content when available",
+    )
+
     args = parser.parse_args()
 
     if args.command == "test-connection":
@@ -247,6 +267,30 @@ def main() -> None:
             icon="bullseye",
         )
         pprint(campaign_result)
+
+    elif args.command == "export-events":
+        config = load_config(args.config)
+        misp = build_misp_client(config)
+
+        from scripts.exporter import (
+            fetch_all_events,
+            fetch_recent_events,
+            save_events_json,
+            dump_inline_attachments,
+        )
+
+        if args.recent:
+            lookback_minutes = config.get("polling", {}).get("lookback_minutes", 10)
+            events = fetch_recent_events(misp, lookback_minutes)
+        else:
+            events = fetch_all_events(misp)
+
+        save_events_json(events, args.output)
+        print(f"Exported {len(events)} event(s) to {args.output}")
+
+        if args.with_attachments:
+            dump_inline_attachments(events, "exports/attachments")
+            print("Attachment dump completed.")
 
 if __name__ == "__main__":
     main()

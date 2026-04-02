@@ -33,10 +33,10 @@ config.yaml
 # =========================
 # Project runtime files
 # =========================
-state.json
+*.json
 
-# Logs (if you add later)
-*.log
+# Logs 
+#*.log
 
 # =========================
 # Editor / IDE
@@ -63,11 +63,15 @@ build/
 dist/
 *.egg-info/
 .eggs/
-backstories/
-ls26campaigns/
-ls26tas/
+
 
 # =========================
-# Jupyter (if ever used)
+# Jupyter
 # =========================
 .ipynb_checkpoints/
+
+# =========================
+# Should not be shared
+# =========================
+backstories/
+exports/
