@@ -14,6 +14,7 @@ polling:
 notifications:
 # Optional
   discord_webhook: "YOUR_DISCORD_WEBHOOK"
+  discord_userid: ""
 
 scoring:
   min_score: 4

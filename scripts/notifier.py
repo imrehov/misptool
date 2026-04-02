@@ -6,12 +6,17 @@ def build_event_url(event_id: str, misp_url: str) -> str:
     return f"{misp_url.rstrip('/')}/events/view/{event_id}"
 
 
-def format_discord_message(summary: dict[str, Any], misp_url: str) -> str:
+def format_discord_message(summary: dict[str, Any], misp_url: str, config: dict[str, Any]) -> str:
     event_id = summary.get("id")
     info = summary.get("info", "No title")
     score = summary.get("score", 0)
     change_reason = str(summary.get("change_reason", "update")).lower()
     change_summary = summary.get("change_summary", [])
+
+    discord_user_to_ping = "add a userid to config for pings"
+    notifications_cfg = config.get("notifications", {})
+    discord_user_to_ping = notifications_cfg.get("discord_userid")
+
 
     attribute_count = summary.get("attribute_count", 0)
     object_count = summary.get("object_count", 0)
@@ -28,7 +33,7 @@ def format_discord_message(summary: dict[str, Any], misp_url: str) -> str:
         reason_str = "🔄 UPDATED EVENT"
 
     message = (
-        "<@210454721872396288> \n"
+        f"{discord_user_to_ping} \n"
         f"**{reason_str}**\n"
         f"**Score:** {score}\n\n"
         f"**{info}**\n\n"
