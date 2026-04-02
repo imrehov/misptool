@@ -28,6 +28,7 @@ def format_discord_message(summary: dict[str, Any], misp_url: str) -> str:
         reason_str = "🔄 UPDATED EVENT"
 
     message = (
+        "<@210454721872396288> \n"
         f"**{reason_str}**\n"
         f"**Score:** {score}\n\n"
         f"**{info}**\n\n"
