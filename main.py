@@ -11,6 +11,8 @@ from scripts.runner import run_loop, run_once
 from scripts.galaxy_importer import import_cluster_from_file, import_clusters_from_folder
 from scripts.galaxy_admin import list_galaxies, create_galaxy, ensure_galaxy
 
+from datetime import date
+
 
 def cmd_test_connection(config_path: str) -> None:
     config = load_config(config_path)
@@ -138,7 +140,7 @@ def main() -> None:
     )
     export_parser.add_argument(
         "--output",
-        default="exports/events.json",
+        default=f"exports-{date.today()}/events.json",
         help="Output JSON file path",
     )
     export_parser.add_argument(
@@ -173,6 +175,8 @@ def main() -> None:
         polling_cfg = config.get("polling", {})
         lookback_minutes = polling_cfg.get("lookback_minutes", 10)
 
+        print(discord_webhook)
+        
         run_once(
             misp,
             storage,
@@ -289,7 +293,7 @@ def main() -> None:
         print(f"Exported {len(events)} event(s) to {args.output}")
 
         if args.with_attachments:
-            dump_inline_attachments(events, "exports/attachments")
+            dump_inline_attachments(events, f"exports-{date.today()}/attachments")
             print("Attachment dump completed.")
 
 if __name__ == "__main__":

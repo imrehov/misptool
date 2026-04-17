@@ -1,21 +1,23 @@
 import requests
+
 from typing import Any
+from scripts.config import load_config
 
 
 def build_event_url(event_id: str, misp_url: str) -> str:
     return f"{misp_url.rstrip('/')}/events/view/{event_id}"
 
 
-def format_discord_message(summary: dict[str, Any], misp_url: str, config: dict[str, Any]) -> str:
+def format_discord_message(summary: dict[str, Any], misp_url: str, discord_user_to_ping: str) -> str:
     event_id = summary.get("id")
     info = summary.get("info", "No title")
     score = summary.get("score", 0)
     change_reason = str(summary.get("change_reason", "update")).lower()
     change_summary = summary.get("change_summary", [])
 
-    discord_user_to_ping = "add a userid to config for pings"
-    notifications_cfg = config.get("notifications", {})
-    discord_user_to_ping = notifications_cfg.get("discord_userid")
+    #discord_user_to_ping = "<@210454721872396288>" # fix this later
+    # notifications_cfg = config.get("notifications", {})
+    # discord_user_to_ping = notifications_cfg.get("discord_userid")
 
 
     attribute_count = summary.get("attribute_count", 0)
@@ -62,8 +64,9 @@ def notify_discord(
     summary: dict[str, Any],
     webhook_url: str,
     misp_url: str,
+    discord_user_to_ping: str,
 ) -> None:
-    message = format_discord_message(summary, misp_url)
+    message = format_discord_message(summary, misp_url, discord_user_to_ping)
 
     response = requests.post(
         webhook_url,

@@ -115,6 +115,7 @@ def process_events(
 ) -> None:
 
     misp_url = config.get("misp", {}).get("url", "")
+    discord_user_to_ping = config.get("notifications", {}).get("discord_userid", "")
     events = fetch_events(misp, lookback_minutes)
 
     if not events:
@@ -186,7 +187,7 @@ def process_events(
 
             if discord_webhook:
                 misp_url = config.get("misp", {}).get("url", "")
-                notify_discord(summary, discord_webhook, misp_url)
+                notify_discord(summary, discord_webhook, misp_url, discord_user_to_ping)
 
             alerted_count += 1
 
