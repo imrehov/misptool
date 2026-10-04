@@ -75,3 +75,6 @@ dist/
 # =========================
 backstories/
 exports/
+AGENTS.md
+.agents/
+TODO.md
