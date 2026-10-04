@@ -7,9 +7,6 @@ from src.misptool.domain.scorer import Scorer
 from src.misptool import Config
 from src.misptool.infrastructure.notifications import Notifier
 
-config = Config("../config.yaml")
-scorer = Scorer(config)
-notifier = Notifier(config)
 
 def now_str() -> str:
     return datetime.now().strftime("%Y-%m-%d %H:%M:%S")

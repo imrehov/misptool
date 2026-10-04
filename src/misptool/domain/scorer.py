@@ -101,7 +101,7 @@ class Scorer:
     def is_interesting(self, event: dict[str, Any]) -> bool:
         scoring_cfg = self.config.get("scoring", {})
         min_score = int(scoring_cfg.get("min_score", 3))
-        return self.score_event(event, config) >= min_score
+        return self.score_event(event) >= min_score
 
 
     def build_event_snapshot(self, event: dict[str, Any]) -> dict[str, Any]:

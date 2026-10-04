@@ -72,7 +72,7 @@ class Notifier:
     ) -> None:
         if not self.discord_webhook:
             return
-        message = self.format_discord_message(summary, self.misp_url, self.discord_user_to_ping)
+        message = self.format_discord_message(summary)
 
         response = requests.post(
             self.discord_webhook,
