@@ -6,7 +6,7 @@ from src.misptool.infrastructure.filesystem.storage import Storage
 from src.misptool.application.event_processor import EventProcessor
 
 
-class CliHandler:
+class CliCommands:
     def __init__(self, config_path: str):
         self.config = Config(config_path)
 
@@ -26,7 +26,7 @@ class CliHandler:
         
         processor.process_events()
 
-    def cmd_test_scorer(self) -> None:
+    def test_scorer(self) -> None:
         misp = build_misp_client(self.config)
         scorer = Scorer(self.config)
         notifier = Notifier(self.config)
@@ -49,5 +49,34 @@ class CliHandler:
 
             print("-" * 40)
 
+    def test_storage(self) -> None:
+        repo = Storage()
+        
+        print("Already seen 123?", repo.has_seen_event("123"))
 
-    
+        repo.mark_event_seen("123")
+        repo.save()
+
+        print("Already seen 123?", repo.has_seen_event("123"))
+
+    def test_connection(self) -> None:
+        misp = build_misp_client(self.config)
+
+        events = misp.search(controller="events", limit=1, pythonify=False)
+        print("Connection successful.")
+
+        if not events:
+            print("No events returned.")
+            return
+        
+        event = events[0].get("Event", events[0])
+
+        summary = {
+            "id": event.get("id"),
+            "info": event.get("info"),
+            "date": event.get("date"),
+            "threat_level_id": event.get("threat_level_id"),
+            "analysis": event.get("analysis"),
+        }
+        print("Sample response:")
+        pprint(summary)   

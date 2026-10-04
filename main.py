@@ -14,64 +14,6 @@ from scripts.galaxy_admin import list_galaxies, create_galaxy, ensure_galaxy
 
 from datetime import date
 
-
-def cmd_test_connection(config_path: str) -> None:
-    config = Config(config_path)
-    misp = build_misp_client(config)
-
-    events = misp.search(controller="events", limit=1, pythonify=False)
-    print("Connection successful.")
-
-    if not events:
-        print("No events returned.")
-        return
-    
-    event = events[0].get("Event", events[0])
-
-    summary = {
-        "id": event.get("id"),
-        "info": event.get("info"),
-        "date": event.get("date"),
-        "threat_level_id": event.get("threat_level_id"),
-        "analysis": event.get("analysis"),
-    }
-    print("Sample response:")
-    pprint(summary)
-
-def cmd_test_storage() -> None:
-    storage = Storage()
-
-    print("Already seen 123?", storage.has_seen_event("123"))
-
-    storage.mark_event_seen("123")
-    storage.save()
-
-    print("Marked 123 as seen.")
-    print("Already seen 123?", storage.has_seen_event("123"))
-
-# def cmd_test_scorer(config_path: str) -> None:
-#     config = Config(config_path)
-#     misp = build_misp_client(config)
-
-#     events = misp.search(controller="events", limit=5, pythonify=False)
-
-#     if not events:
-#         print("No events returned.")
-#         return
-
-#     for raw_event in events:
-#         summary = summarize_event(raw_event, config)
-#         interesting = is_interesting(raw_event, config)
-
-#         pprint(summary)
-#         print("interesting:", interesting)
-
-#         if interesting:
-#             notify_console(summary)
-
-#         print("-" * 40)
-
-
 def main() -> None:
     parser = argparse.ArgumentParser(description="Blue Team MISP helper")
     parser.add_argument(
@@ -158,13 +100,13 @@ def main() -> None:
     args = parser.parse_args()
 
     if args.command == "test-connection":
-        cmd_test_connection(args.config)
-        
+        CliHandler(args.config).test_connection()
+
     elif args.command == "test-storage":
-        cmd_test_storage()
+        CliHandler(args.config).test_storage()
 
     elif args.command == "test-scorer":
-        CliHandler(args.config).cmd_test_scorer()
+        CliHandler(args.config).test_scorer()
 
     elif args.command == "run-once":
 
