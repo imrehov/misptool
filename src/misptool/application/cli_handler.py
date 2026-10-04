@@ -10,24 +10,30 @@ class CliCommands:
     def __init__(self, config_path: str):
         self.config = Config(config_path)
 
-    def run_once(self) -> None:
-        misp = build_misp_client(self.config)
-        repo = Storage()
-        scorer = Scorer(self.config)
-        notifier = Notifier(self.config)
-        
-        processor = EventProcessor(
+    def build_misp(self):
+        return build_misp_client(self.config)
+
+    def build_processor(self):
+        return EventProcessor(
             misp_client=misp,
             repo=repo,
             scorer=scorer,
             notifier=notifier,
             config=self.config,
-            )
+        )
+
+    def run_once(self) -> None:
+        misp = build_misp()
+        repo = Storage()
+        scorer = Scorer(self.config)
+        notifier = Notifier(self.config)
+        
+        processor = build_processor()
         
         processor.process_events()
 
     def test_scorer(self) -> None:
-        misp = build_misp_client(self.config)
+        misp = build_misp()
         scorer = Scorer(self.config)
         notifier = Notifier(self.config)
 
@@ -60,7 +66,7 @@ class CliCommands:
         print("Already seen 123?", repo.has_seen_event("123"))
 
     def test_connection(self) -> None:
-        misp = build_misp_client(self.config)
+        misp = build_misp()
 
         events = misp.search(controller="events", limit=1, pythonify=False)
         print("Connection successful.")
