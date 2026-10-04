@@ -1,10 +1,15 @@
 import time
-from typing import Any
+from typing import Dict, Any
 from datetime import datetime
 
 from scripts.storage import Storage
-from scripts.scorer import build_event_snapshot, is_interesting, summarize_event
+from src.misptool.domain.scorer import Scorer
+from src.misptool import Config
+
 from scripts.notifier import notify_console, notify_discord
+
+config = Config("../config.yaml")
+scorer = Scorer(config.load_config())
 
 def now_str() -> str:
     return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
