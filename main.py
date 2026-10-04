@@ -49,27 +49,27 @@ def cmd_test_storage() -> None:
     print("Marked 123 as seen.")
     print("Already seen 123?", storage.has_seen_event("123"))
 
-def cmd_test_scorer(config_path: str) -> None:
-    config = Config(config_path)
-    misp = build_misp_client(config)
+# def cmd_test_scorer(config_path: str) -> None:
+#     config = Config(config_path)
+#     misp = build_misp_client(config)
 
-    events = misp.search(controller="events", limit=5, pythonify=False)
+#     events = misp.search(controller="events", limit=5, pythonify=False)
 
-    if not events:
-        print("No events returned.")
-        return
+#     if not events:
+#         print("No events returned.")
+#         return
 
-    for raw_event in events:
-        summary = summarize_event(raw_event, config)
-        interesting = is_interesting(raw_event, config)
+#     for raw_event in events:
+#         summary = summarize_event(raw_event, config)
+#         interesting = is_interesting(raw_event, config)
 
-        pprint(summary)
-        print("interesting:", interesting)
+#         pprint(summary)
+#         print("interesting:", interesting)
 
-        if interesting:
-            notify_console(summary)
+#         if interesting:
+#             notify_console(summary)
 
-        print("-" * 40)
+#         print("-" * 40)
 
 
 def main() -> None:
@@ -164,7 +164,7 @@ def main() -> None:
         cmd_test_storage()
 
     elif args.command == "test-scorer":
-        cmd_test_scorer(args.config)
+        CliHandler(args.config).cmd_test_scorer()
 
     elif args.command == "run-once":
 

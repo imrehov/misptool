@@ -26,5 +26,28 @@ class CliHandler:
         
         processor.process_events()
 
+    def cmd_test_scorer(self) -> None:
+        misp = build_misp_client(self.config)
+        scorer = Scorer(self.config)
+        notifier = Notifier(self.config)
+
+        events = misp.search(controller="events", limit=5, pythonify=False)
+
+        if not events:
+            print("No events returned.")
+            return
+
+        for raw_event in events:
+            summary = scorer.summarize_event(raw_event, config)
+            interesting = scorer.is_interesting(raw_event, config)
+
+            pprint(summary)
+            print("interesting:", interesting)
+
+            if interesting:
+                notifier.notify_console(summary)
+
+            print("-" * 40)
+
 
     
