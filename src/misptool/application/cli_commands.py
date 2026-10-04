@@ -4,9 +4,11 @@ from src.misptool.domain.scorer import Scorer
 from src.misptool.infrastructure.filesystem.storage import Storage
 from src.misptool.application.event_processor import EventProcessor
 
-from scripts.galaxy_admin import list_galaxies
+from scripts.galaxy_admin import list_galaxies, create_galaxy
+from scripts.galaxy_importer import import_cluster_from_file, import_clusters_from_folder
 
 from rich.pretty import pprint
+from datetime import datetime
 
 class CliCommands:
     def __init__(self, config_path: str):
@@ -96,3 +98,85 @@ class CliCommands:
     def list_galaxies(self) -> None:
         misp = self.build_misp()
         pprint(list_galaxies(misp))
+
+    def import_cluster(self, json_path) -> None:
+        misp = self.build_misp()
+
+        pprint(import_cluster_from_file(misp, json_path))
+
+    def import_all(self, folder_path) -> None:
+        misp = self.build_misp()
+
+        result = import_clusters_from_folder(misp, folder_path)
+
+        print(f"Folder: {result['folder']}")
+        print(f"Total JSON files: {result['total']}")
+        print(f"Successful imports: {result['success_count']}")
+        print(f"Failed imports: {result['failure_count']}")
+
+        for item in result["results"]:
+            if item["status"] == "success":
+                print(f"[OK] {item['file']}")
+            else:
+                print(f"[ERR] {item['file']}: {item['error']}")
+    
+    def create_galaxy(self, name, galaxy_type, description, namespace, icon) -> None:
+        misp = self.build_misp()
+
+        result = create_galaxy(
+            misp=misp,
+            name=name,
+            galaxy_type=galaxy_type,
+            description=description,
+            namespace=namespace,
+            icon=icon,
+        )
+
+        pprint(result)
+
+    def ensure_galaxies(self) -> None:
+        misp = self.build_misp()
+
+        ta_result = ensure_galaxy(
+            misp=misp,
+            name="Threat Actor",
+            galaxy_type="threat-actor",
+            description="Threat actors are malicious actors or adversaries.",
+            namespace="custom",
+            icon="user-secret",
+        )
+        pprint(ta_result)
+
+        campaign_result = ensure_galaxy(
+            misp=misp,
+            name="Campaign",
+            galaxy_type="campaign",
+            description="Campaigns represent specific adversary operations.",
+            namespace="custom",
+            icon="bullseye",
+        )
+        pprint(campaign_result)
+
+    def export_events(self, output, recent=false, with_attachments=false) -> None:
+        misp = self.build_misp()
+
+        from scripts.exporter import (
+            fetch_all_events,
+            fetch_recent_events,
+            save_events_json,
+            dump_inline_attachments,
+        )
+
+        if recent:
+            lookback_minutes = config.get("polling", {}).get("lookback_minutes", 10)
+            events = fetch_recent_events(misp, lookback_minutes)
+        else:
+            events = fetch_all_events(misp)
+
+        save_events_json(events, output)
+        print(f"Exported {len(events)} event(s) to {output}")
+
+        if with_attachments:
+            dump_inline_attachments(events, f"exports-{datetime.today()}/attachments")
+            print("Attachment dump completed.")
+    

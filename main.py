@@ -128,93 +128,28 @@ def main() -> None:
     #     )
 
     elif args.command == "import-cluster":
-        config = Config(args.config)
-        misp = build_misp_client(config)
-
-        result = import_cluster_from_file(misp, args.json_path)
-        pprint(result)
+        CliCommands(args.config).import_cluster(args.json_path)
 
     elif args.command == "import-all":
-        config = Config(args.config)
-        misp = build_misp_client(config)
+        CliCommands(args.config).import_all(args.folder_path)
 
-        result = import_clusters_from_folder(misp, args.folder_path)
-
-        print(f"Folder: {result['folder']}")
-        print(f"Total JSON files: {result['total']}")
-        print(f"Successful imports: {result['success_count']}")
-        print(f"Failed imports: {result['failure_count']}")
-
-        for item in result["results"]:
-            if item["status"] == "success":
-                print(f"[OK] {item['file']}")
-            else:
-                print(f"[ERR] {item['file']}: {item['error']}")
-    
     elif args.command == "list-galaxies":
         CliCommands(args.config).list_galaxies()
 
     elif args.command == "create-galaxy":
-        config = Config(args.config)
-        misp = build_misp_client(config)
-
-        result = create_galaxy(
-            misp=misp,
+        CliCommands(args.config).create_galaxy(
             name=args.name,
             galaxy_type=args.type,
             description=args.description,
             namespace=args.namespace,
             icon=args.icon,
         )
-        pprint(result)
 
     elif args.command == "ensure-galaxies":
-        config = Config(args.config)
-        misp = build_misp_client(config)
-
-        ta_result = ensure_galaxy(
-            misp=misp,
-            name="Threat Actor",
-            galaxy_type="threat-actor",
-            description="Threat actors are malicious actors or adversaries.",
-            namespace="custom",
-            icon="user-secret",
-        )
-        pprint(ta_result)
-
-        campaign_result = ensure_galaxy(
-            misp=misp,
-            name="Campaign",
-            galaxy_type="campaign",
-            description="Campaigns represent specific adversary operations.",
-            namespace="custom",
-            icon="bullseye",
-        )
-        pprint(campaign_result)
+        CliCommands(args.config).ensure_galaxies()
 
     elif args.command == "export-events":
-        config = Config(args.config)
-        misp = build_misp_client(config)
-
-        from scripts.exporter import (
-            fetch_all_events,
-            fetch_recent_events,
-            save_events_json,
-            dump_inline_attachments,
-        )
-
-        if args.recent:
-            lookback_minutes = config.get("polling", {}).get("lookback_minutes", 10)
-            events = fetch_recent_events(misp, lookback_minutes)
-        else:
-            events = fetch_all_events(misp)
-
-        save_events_json(events, args.output)
-        print(f"Exported {len(events)} event(s) to {args.output}")
-
-        if args.with_attachments:
-            dump_inline_attachments(events, f"exports-{date.today()}/attachments")
-            print("Attachment dump completed.")
+        CliCommands(args.config).export_events(args.output, args.recent, args.with_attachments)
 
 if __name__ == "__main__":
     main()
