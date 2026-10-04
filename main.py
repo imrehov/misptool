@@ -3,11 +3,7 @@ from rich.pretty import pprint
 
 from scripts.misp_client import build_misp_client
 from src.misptool.config import Config
-from src.misptool.infrastructure.notifications.notifier import Notifier
-from src.misptool.domain.scorer import Scorer
-from src.misptool.infrastructure.filesystem.storage import Storage
-from src.misptool.application.event_processor import EventProcessor
-from src.misptool.application.cli_handler import CliHandler
+from src.misptool.application.cli_commands import CliCommands
 
 from scripts.galaxy_importer import import_cluster_from_file, import_clusters_from_folder
 from scripts.galaxy_admin import list_galaxies, create_galaxy, ensure_galaxy
@@ -100,17 +96,16 @@ def main() -> None:
     args = parser.parse_args()
 
     if args.command == "test-connection":
-        CliHandler(args.config).test_connection()
+        CliCommands(args.config).test_connection()
 
     elif args.command == "test-storage":
-        CliHandler(args.config).test_storage()
+        CliCommands(args.config).test_storage()
 
     elif args.command == "test-scorer":
-        CliHandler(args.config).test_scorer()
+        CliCommands(args.config).test_scorer()
 
     elif args.command == "run-once":
-
-        CliHandler(args.config).run_once()
+        CliCommands(args.config).run_once()
         
 
     # elif args.command == "run":
