@@ -120,7 +120,7 @@ class Scorer:
             "galaxy_tag_names": self.get_galaxy_tag_names(event),
             "attribute_count": self.count_attributes(event),
             "object_count": self.count_objects(event),
-            "score": self.score_event(event, self.config),
+            "score": self.score_event(event),
         }
 
         snapshot["fingerprint"] = self.make_event_fingerprint(snapshot)

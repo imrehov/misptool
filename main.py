@@ -1,12 +1,10 @@
 import argparse
 from rich.pretty import pprint
 
-from scripts.config import load_config
 from scripts.misp_client import build_misp_client
-from scripts.storage import Storage
-from scripts.scorer import is_interesting, score_event, summarize_event
-from scripts.notifier import notify_console
-from scripts.runner import run_loop, run_once
+from src.misptool.config import Config
+from src.misptool.infrastructure.notifications.notifier import Notifier
+from src.misptool.domain.scorer import Scorer
 
 from scripts.galaxy_importer import import_cluster_from_file, import_clusters_from_folder
 from scripts.galaxy_admin import list_galaxies, create_galaxy, ensure_galaxy
@@ -15,7 +13,7 @@ from datetime import date
 
 
 def cmd_test_connection(config_path: str) -> None:
-    config = load_config(config_path)
+    config = Config(config_path)
     misp = build_misp_client(config)
 
     events = misp.search(controller="events", limit=1, pythonify=False)
@@ -49,7 +47,7 @@ def cmd_test_storage() -> None:
     print("Already seen 123?", storage.has_seen_event("123"))
 
 def cmd_test_scorer(config_path: str) -> None:
-    config = load_config(config_path)
+    config = Config(config_path)
     misp = build_misp_client(config)
 
     events = misp.search(controller="events", limit=5, pythonify=False)
@@ -166,27 +164,18 @@ def main() -> None:
         cmd_test_scorer(args.config)
 
     elif args.command == "run-once":
-        config = load_config(args.config)
+        config = Config(args.config).load_config()
         misp = build_misp_client(config)
         storage = Storage()
-        notifications_cfg = config.get("notifications", {})
-        webhook = notifications_cfg.get("discord_webhook")
+        scorer = Scorer(config)
+        notifier = Notifier(config)
+        processor = EventProcessor(misp, storage, scorer, notifier, config)
 
-        polling_cfg = config.get("polling", {})
-        lookback_minutes = polling_cfg.get("lookback_minutes", 10)
-
-        print(discord_webhook)
+        processor.process_events()
         
-        run_once(
-            misp,
-            storage,
-            config=config,
-            lookback_minutes=lookback_minutes,
-            discord_webhook=webhook,
-        )
 
     elif args.command == "run":
-        config = load_config(args.config)
+        config = Config(args.config)
         misp = build_misp_client(config)
         storage = Storage()
         notifications_cfg = config.get("notifications", {})
@@ -206,14 +195,14 @@ def main() -> None:
         )
 
     elif args.command == "import-cluster":
-        config = load_config(args.config)
+        config = Config(args.config)
         misp = build_misp_client(config)
 
         result = import_cluster_from_file(misp, args.json_path)
         pprint(result)
 
     elif args.command == "import-all":
-        config = load_config(args.config)
+        config = Config(args.config)
         misp = build_misp_client(config)
 
         result = import_clusters_from_folder(misp, args.folder_path)
@@ -230,12 +219,12 @@ def main() -> None:
                 print(f"[ERR] {item['file']}: {item['error']}")
     
     elif args.command == "list-galaxies":
-        config = load_config(args.config)
+        config = Config(args.config)
         misp = build_misp_client(config)
         pprint(list_galaxies(misp))
 
     elif args.command == "create-galaxy":
-        config = load_config(args.config)
+        config = Config(args.config)
         misp = build_misp_client(config)
 
         result = create_galaxy(
@@ -249,7 +238,7 @@ def main() -> None:
         pprint(result)
 
     elif args.command == "ensure-galaxies":
-        config = load_config(args.config)
+        config = Config(args.config)
         misp = build_misp_client(config)
 
         ta_result = ensure_galaxy(
@@ -273,7 +262,7 @@ def main() -> None:
         pprint(campaign_result)
 
     elif args.command == "export-events":
-        config = load_config(args.config)
+        config = Config(args.config)
         misp = build_misp_client(config)
 
         from scripts.exporter import (

@@ -4,7 +4,7 @@ from datetime import datetime
 
 from scripts.storage import Storage
 from src.misptool.domain.scorer import Scorer
-from src.misptool import Config
+from src.misptool.config import Config
 from src.misptool.infrastructure.notifications import Notifier
 
 
