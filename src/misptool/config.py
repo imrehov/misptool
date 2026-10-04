@@ -14,7 +14,7 @@ class Config:
         path = Path(self.config_path)
 
         if not path.exists():
-            raise FileNotFoundError(f"Config file not found: {config_path}")
+            raise FileNotFoundError(f"Config file not found: {self.config_path}")
 
         with path.open("r", encoding="utf-8") as f:
             config = yaml.safe_load(f)

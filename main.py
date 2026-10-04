@@ -5,6 +5,9 @@ from scripts.misp_client import build_misp_client
 from src.misptool.config import Config
 from src.misptool.infrastructure.notifications.notifier import Notifier
 from src.misptool.domain.scorer import Scorer
+from src.misptool.infrastructure.filesystem.storage import Storage
+from src.misptool.application.event_processor import EventProcessor
+from src.misptool.application.cli_handler import CliHandler
 
 from scripts.galaxy_importer import import_cluster_from_file, import_clusters_from_folder
 from scripts.galaxy_admin import list_galaxies, create_galaxy, ensure_galaxy
@@ -164,35 +167,29 @@ def main() -> None:
         cmd_test_scorer(args.config)
 
     elif args.command == "run-once":
-        config = Config(args.config).load_config()
-        misp = build_misp_client(config)
-        storage = Storage()
-        scorer = Scorer(config)
-        notifier = Notifier(config)
-        processor = EventProcessor(misp, storage, scorer, notifier, config)
 
-        processor.process_events()
+        CliHandler(args.config).run_once()
         
 
-    elif args.command == "run":
-        config = Config(args.config)
-        misp = build_misp_client(config)
-        storage = Storage()
-        notifications_cfg = config.get("notifications", {})
-        webhook = notifications_cfg.get("discord_webhook")
+    # elif args.command == "run":
+    #     config = Config(args.config)
+    #     misp = build_misp_client(config)
+    #     storage = Storage()
+    #     notifications_cfg = config.get("notifications", {})
+    #     webhook = notifications_cfg.get("discord_webhook")
 
-        polling_cfg = config.get("polling", {})
-        interval_seconds = polling_cfg.get("interval_seconds", 60)
-        lookback_minutes = polling_cfg.get("lookback_minutes", 10)
+    #     polling_cfg = config.get("polling", {})
+    #     interval_seconds = polling_cfg.get("interval_seconds", 60)
+    #     lookback_minutes = polling_cfg.get("lookback_minutes", 10)
 
-        run_loop(
-            misp,
-            storage,
-            config=config,
-            interval_seconds=interval_seconds,
-            lookback_minutes=lookback_minutes,
-            discord_webhook=webhook,
-        )
+    #     run_loop(
+    #         misp,
+    #         storage,
+    #         config=config,
+    #         interval_seconds=interval_seconds,
+    #         lookback_minutes=lookback_minutes,
+    #         discord_webhook=webhook,
+    #     )
 
     elif args.command == "import-cluster":
         config = Config(args.config)
