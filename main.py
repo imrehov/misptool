@@ -1,7 +1,6 @@
 import argparse
 from rich.pretty import pprint
 
-from scripts.misp_client import build_misp_client
 from src.misptool.config import Config
 from src.misptool.application.cli_commands import CliCommands
 

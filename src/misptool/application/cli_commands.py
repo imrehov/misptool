@@ -1,17 +1,26 @@
-from scripts.misp_client import build_misp_client
 from src.misptool.config import Config
 from src.misptool.infrastructure.notifications.notifier import Notifier
 from src.misptool.domain.scorer import Scorer
 from src.misptool.infrastructure.filesystem.storage import Storage
 from src.misptool.application.event_processor import EventProcessor
 
-import pprint
+from rich.pretty import pprint
 
 class CliCommands:
     def __init__(self, config_path: str):
-        self.config = Config(config_path)
+        self.config_path = config_path
+        self._config = None
+    
+    @property
+    def config(self):
+        if self._config is None:
+            self._config = Config(self.config_path)
+        return self._config
 
     def build_misp(self):
+
+        from scripts.misp_client import build_misp_client
+
         return build_misp_client(self.config)
 
     def build_processor(self):
@@ -19,7 +28,7 @@ class CliCommands:
             misp_client=self.build_misp(),
             repo=Storage(),
             scorer=Scorer(self.config),
-            notifier=Notifi(self.config),
+            notifier=Notifier(self.config),
             config=self.config,
         )
 
@@ -55,7 +64,7 @@ class CliCommands:
         
         print("Already seen 123?", repo.get_event_state("123"))
 
-        repo.update_event_state("123")
+        repo.update_event_state("123", {"event_id": "123"})
         repo.save()
 
         print("Already seen 123?", repo.get_event_state("123"))
