@@ -5,11 +5,11 @@ from datetime import datetime
 from scripts.storage import Storage
 from src.misptool.domain.scorer import Scorer
 from src.misptool import Config
-
-from scripts.notifier import notify_console, notify_discord
+from src.misptool.infrastructure.notifications import Notifier
 
 config = Config("../config.yaml")
-scorer = Scorer(config.load_config())
+scorer = Scorer(config)
+notifier = Notifier(config)
 
 def now_str() -> str:
     return datetime.now().strftime("%Y-%m-%d %H:%M:%S")

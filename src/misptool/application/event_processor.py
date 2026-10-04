@@ -1,3 +1,4 @@
+from typing import Any
 
 class EventProcessor:
     def __init__(self, misp_client, repo, scorer, notifier, config: dict[str, Any]):
