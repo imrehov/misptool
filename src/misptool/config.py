@@ -8,7 +8,7 @@ class Config:
     def __init__(self, config_path: str):
         self.config_path = config_path
 
-        self.load_config()
+        self.data = self.load_config()
 
     def load_config(self) -> Dict[str, Any]:
         path = Path(self.config_path)
@@ -23,3 +23,6 @@ class Config:
             raise ValueError("Config file must contain a YAML dictionary at the top level.")
 
         return config
+
+    def get(self, key, default=None):
+        return self.data.get(key, default)
