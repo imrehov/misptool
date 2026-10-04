@@ -4,6 +4,8 @@ from src.misptool.domain.scorer import Scorer
 from src.misptool.infrastructure.filesystem.storage import Storage
 from src.misptool.application.event_processor import EventProcessor
 
+from scripts.galaxy_admin import list_galaxies
+
 from rich.pretty import pprint
 
 class CliCommands:
@@ -89,4 +91,8 @@ class CliCommands:
             "analysis": event.get("analysis"),
         }
         print("Sample response:")
-        pprint(summary)   
+        pprint(summary)
+
+    def list_galaxies(self) -> None:
+        misp = self.build_misp()
+        pprint(list_galaxies(misp))

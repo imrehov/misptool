@@ -152,9 +152,7 @@ def main() -> None:
                 print(f"[ERR] {item['file']}: {item['error']}")
     
     elif args.command == "list-galaxies":
-        config = Config(args.config)
-        misp = build_misp_client(config)
-        pprint(list_galaxies(misp))
+        CliCommands(args.config).list_galaxies()
 
     elif args.command == "create-galaxy":
         config = Config(args.config)
