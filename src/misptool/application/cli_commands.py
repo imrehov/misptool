@@ -1,13 +1,9 @@
-from src.misptool.config import Config
+
 from src.misptool.infrastructure.notifications.notifier import Notifier
 from src.misptool.domain.scorer import Scorer
 from src.misptool.infrastructure.filesystem.storage import Storage
 from src.misptool.application.event_processor import EventProcessor
 
-from scripts.galaxy_admin import list_galaxies, create_galaxy
-from scripts.galaxy_importer import import_cluster_from_file, import_clusters_from_folder
-
-from rich.pretty import pprint
 from datetime import datetime
 
 class CliCommands:
@@ -157,7 +153,7 @@ class CliCommands:
         )
         pprint(campaign_result)
 
-    def export_events(self, output, recent=false, with_attachments=false) -> None:
+    def export_events(self, output, recent=False, with_attachments=False) -> None:
         misp = self.build_misp()
 
         from scripts.exporter import (
@@ -168,7 +164,7 @@ class CliCommands:
         )
 
         if recent:
-            lookback_minutes = config.get("polling", {}).get("lookback_minutes", 10)
+            lookback_minutes = self.config.get("polling", {}).get("lookback_minutes", 10)
             events = fetch_recent_events(misp, lookback_minutes)
         else:
             events = fetch_all_events(misp)
@@ -179,4 +175,7 @@ class CliCommands:
         if with_attachments:
             dump_inline_attachments(events, f"exports-{datetime.today()}/attachments")
             print("Attachment dump completed.")
+
+    def run_loop(self) -> None:
+        misp = self.build_misp()
     
