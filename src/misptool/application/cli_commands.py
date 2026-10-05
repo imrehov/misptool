@@ -3,8 +3,13 @@ from src.misptool.infrastructure.notifications.notifier import Notifier
 from src.misptool.domain.scorer import Scorer
 from src.misptool.infrastructure.filesystem.storage import Storage
 from src.misptool.application.event_processor import EventProcessor
+from src.misptool.config import Config
+
+from scripts.galaxy_importer import import_cluster_from_file, import_clusters_from_folder
+from scripts.galaxy_admin import list_galaxies, create_galaxy, ensure_galaxy
 
 from datetime import datetime
+from rich.pretty import pprint
 
 class CliCommands:
     def __init__(self, config_path: str):
@@ -17,6 +22,9 @@ class CliCommands:
             self._config = Config(self.config_path)
         return self._config
 
+    def now_str(self) -> str:
+        return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+    
     def build_misp(self):
 
         from scripts.misp_client import build_misp_client
@@ -177,5 +185,23 @@ class CliCommands:
             print("Attachment dump completed.")
 
     def run_loop(self) -> None:
-        misp = self.build_misp()
+        interval_seconds = self.config.get("polling", {}).get("interval_seconds", 60)      
+        lookback_minutes = self.config.get("polling", {}).get("lookback_minutes", 10)
+        import time
+
+        processor = self.build_processor()
+        
+        print(f"[{self.now_str()}] - Starting loop. Polling every {interval_seconds} seconds.")
+        print(f"[{self.now_str()}] - Fetching events from the last {lookback_minutes} minute(s).")
+
+        while True:
+            try:
+                processor.process_events()
+            
+            except Exception as e:
+                print("Error during run: ", e)
+            
+            time.sleep(interval_seconds)
+
+
     

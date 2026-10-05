@@ -1,11 +1,7 @@
 import argparse
-from rich.pretty import pprint
 
 from src.misptool.config import Config
 from src.misptool.application.cli_commands import CliCommands
-
-from scripts.galaxy_importer import import_cluster_from_file, import_clusters_from_folder
-from scripts.galaxy_admin import list_galaxies, create_galaxy, ensure_galaxy
 
 from datetime import date
 
@@ -107,25 +103,8 @@ def main() -> None:
         CliCommands(args.config).run_once()
         
 
-    # elif args.command == "run":
-    #     config = Config(args.config)
-    #     misp = build_misp_client(config)
-    #     storage = Storage()
-    #     notifications_cfg = config.get("notifications", {})
-    #     webhook = notifications_cfg.get("discord_webhook")
-
-    #     polling_cfg = config.get("polling", {})
-    #     interval_seconds = polling_cfg.get("interval_seconds", 60)
-    #     lookback_minutes = polling_cfg.get("lookback_minutes", 10)
-
-    #     run_loop(
-    #         misp,
-    #         storage,
-    #         config=config,
-    #         interval_seconds=interval_seconds,
-    #         lookback_minutes=lookback_minutes,
-    #         discord_webhook=webhook,
-    #     )
+    elif args.command == "run":
+        CliCommands(args.config).run_loop()
 
     elif args.command == "import-cluster":
         CliCommands(args.config).import_cluster(args.json_path)
