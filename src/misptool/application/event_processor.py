@@ -143,11 +143,6 @@ class EventProcessor:
             event = raw_event.get("Event", raw_event)
             event_id = str(event.get("id", "")).strip()
 
-            print(f"[DEBUG] storage path: {self.repo.path.resolve()}")
-            print(f"[DEBUG] event_id={event_id!r}")
-            print(f"[DEBUG] known ids sample={list(self.repo.events.keys())[:10]}")
-            print(f"[DEBUG] old_state={self.repo.get_event_state(event_id)}")
-
             if not event_id:
                 continue
 
@@ -159,10 +154,6 @@ class EventProcessor:
             interesting = self.scorer.is_interesting(event)
             more_interesting = self.event_became_more_interesting(old_state, new_state)
 
-            print(f"[DEBUG] changed={changed}")
-            print(f"[DEBUG] interesting={interesting}")
-            print(f"[DEBUG] more_interesting={more_interesting}")
-
             if not changed:
                 continue
 
@@ -170,11 +161,6 @@ class EventProcessor:
 
             should_alert = False
             reason = "updated"
-
-            print(f"[DEBUG] storage path: {self.repo.path.resolve()}")
-            print(f"[DEBUG] event_id={event_id!r}")
-            print(f"[DEBUG] known ids sample={list(self.repo.events.keys())[:10]}")
-            print(f"[DEBUG] old_state={self.repo.get_event_state(event_id)}")
 
             if old_state is None:
                 reason = "new"
@@ -187,8 +173,6 @@ class EventProcessor:
                         reason = "enriched"
                     else:
                         reason = "updated"
-
-            print(f"[DEBUG] should_alert={should_alert}, reason={reason}")
 
             if should_alert:
                 summary = self.scorer.summarize_event(event)
