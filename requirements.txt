@@ -2,4 +2,6 @@ pymisp
 pyyaml
 requests
 rich
-requests
+sqlalchemy
+psycopg[binary]
+alembic
