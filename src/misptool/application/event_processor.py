@@ -120,7 +120,7 @@ class EventProcessor:
 
     def process_events(
         self,
-    ) -> None:
+    ) -> dict[str, int]:
 
         misp_url = self.config.get("misp", {}).get("url", "")
         discord_user_to_ping = self.config.get("notifications", {}).get("discord_userid", "")
@@ -128,7 +128,11 @@ class EventProcessor:
 
         if not events:
             print(f"[{self.now_str()}] - No events fetched.")
-            return
+            return {
+                "fetched": 0,
+                "changed": 0,
+                "alerted": 0,
+            }
 
         print(f"[{self.now_str()}] - Fetched {len(events)} event(s).")
 
@@ -204,3 +208,9 @@ class EventProcessor:
 
         print(f"[{self.now_str()}] - Changed events processed: {changed_count}")
         print(f"[{self.now_str()}] - Interesting events alerted: {alerted_count}")
+
+        return {
+            "fetched": len(events),
+            "changed": changed_count,
+            "alerted": alerted_count,
+        }
