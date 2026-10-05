@@ -203,3 +203,37 @@ def test_enriched_event_alerts_with_enriched_reason(tmp_path):
     assert len(second_notifier.console_messages) == 1
     assert second_notifier.console_messages[0]["change_reason"] == "enriched"
     assert "attributes: 0 -> 1" in second_notifier.console_messages[0]["change_summary"]
+
+
+def test_no_events_returns_zero_counts_and_does_not_alert(tmp_path):
+    config = {
+        "polling": {"lookback_minutes": 10},
+        "misp": {"url": "https://misp.example"},
+        "notifications": {"discord_userid": "123"},
+        "scoring": {
+            "min_score": 1,
+            "keywords": {"apt": 5},
+        },
+    }
+
+    storage = Storage(str(tmp_path / "state.json"))
+    notifier = FakeNotifier()
+
+    processor = EventProcessor(
+        misp_client=FakeMispClient([]),
+        repo=storage,
+        scorer=Scorer(config),
+        notifier=notifier,
+        config=config,
+    )
+
+    result = processor.process_events()
+
+    assert result == {
+        "fetched": 0,
+        "changed": 0,
+        "alerted": 0,
+    }
+    assert storage.events == {}
+    assert notifier.console_messages == []
+    assert notifier.discord_messages == []
