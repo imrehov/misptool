@@ -3,12 +3,10 @@ from typing import Any
 
 from src.misptool.config import Config
 from src.misptool.domain.scorer import Scorer
-from src.misptool.infrastructure import notifications
-from src.misptool.application.ports import EventStateRepository, MispEventSource
-
+from src.misptool.application.ports import EventStateRepository, MispEventSource, EventNotifier
 
 class EventProcessor:
-    def __init__(self, misp_client: MispEventSource, repo: EventStateRepository, scorer: Scorer, notifier: notifications.notifier.Notifier, config: Config):
+    def __init__(self, misp_client: MispEventSource, repo: EventStateRepository, scorer: Scorer, notifier: EventNotifier, config: Config):
         self.misp_client = misp_client
         self.repo = repo
         self.scorer = scorer
