@@ -126,3 +126,80 @@ def test_unchanged_event_does_not_alert_twice(tmp_path):
     assert second_result["changed"] == 0
     assert second_result["alerted"] == 0
     assert len(second_notifier.console_messages) == 0
+
+
+def test_enriched_event_alerts_with_enriched_reason(tmp_path):
+    config = {
+        "polling": {"lookback_minutes": 10},
+        "misp": {"url": "https://misp.example"},
+        "notifications": {"discord_userid": "123"},
+        "scoring": {
+            "min_score": 1,
+            "keywords": {"apt": 5},
+        },
+    }
+
+    initial_event = {
+        "Event": {
+            "id": "42",
+            "info": "APT activity",
+            "date": "2026-10-05",
+            "timestamp": "1000",
+            "publish_timestamp": "1001",
+            "published": True,
+            "threat_level_id": "1",
+            "analysis": "0",
+            "Attribute": [],
+            "Object": [],
+            "Tag": [],
+        }
+    }
+
+    enriched_event = {
+        "Event": {
+            "id": "42",
+            "info": "APT activity",
+            "date": "2026-10-05",
+            "timestamp": "1000",
+            "publish_timestamp": "1001",
+            "published": True,
+            "threat_level_id": "1",
+            "analysis": "0",
+            "Attribute": [
+                {"type": "ip-dst", "value": "203.0.113.10"},
+            ],
+            "Object": [],
+            "Tag": [],
+        }
+    }
+
+    storage = Storage(str(tmp_path / "state.json"))
+
+    first_processor = EventProcessor(
+        misp_client=FakeMispClient([initial_event]),
+        repo=storage,
+        scorer=Scorer(config),
+        notifier=FakeNotifier(),
+        config=config,
+    )
+    first_result = first_processor.process_events()
+
+    second_notifier = FakeNotifier()
+    second_processor = EventProcessor(
+        misp_client=FakeMispClient([enriched_event]),
+        repo=storage,
+        scorer=Scorer(config),
+        notifier=second_notifier,
+        config=config,
+    )
+    second_result = second_processor.process_events()
+
+    saved_state = storage.get_event_state("42")
+
+    assert first_result["alerted"] == 1
+    assert second_result["changed"] == 1
+    assert second_result["alerted"] == 1
+    assert saved_state["attribute_count"] == 1
+    assert len(second_notifier.console_messages) == 1
+    assert second_notifier.console_messages[0]["change_reason"] == "enriched"
+    assert "attributes: 0 -> 1" in second_notifier.console_messages[0]["change_summary"]
