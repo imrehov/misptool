@@ -7,7 +7,7 @@ class FakeMispClient:
     def __init__(self, events):
         self.events = events
 
-    def search(self, **kwargs):
+    def fetch_events(self, lookback_minutes):
         return self.events
 
 

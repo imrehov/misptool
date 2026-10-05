@@ -26,10 +26,9 @@ class CliCommands:
         return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     
     def build_misp(self):
+        from src.misptool.infrastructure.misp_client import MispClient
 
-        from scripts.misp_client import build_misp_client
-
-        return build_misp_client(self.config)
+        return MispClient(self.config)
 
     def build_processor(self):
         return EventProcessor(

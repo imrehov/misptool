@@ -11,3 +11,7 @@ class EventStateRepository(Protocol):
 
     def save(self) -> None:
         ...
+
+class MispEventSource(Protocol):
+    def fetch_events(self, lookback_minutes: int) -> list[dict[str, Any]]:
+        ...

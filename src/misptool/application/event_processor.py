@@ -4,11 +4,11 @@ from typing import Any
 from src.misptool.config import Config
 from src.misptool.domain.scorer import Scorer
 from src.misptool.infrastructure import notifications
-from src.misptool.application.ports import EventStateRepository
+from src.misptool.application.ports import EventStateRepository, MispEventSource
 
 
 class EventProcessor:
-    def __init__(self, misp_client, repo: EventStateRepository, scorer: Scorer, notifier: notifications.notifier.Notifier, config: Config):
+    def __init__(self, misp_client: MispEventSource, repo: EventStateRepository, scorer: Scorer, notifier: notifications.notifier.Notifier, config: Config):
         self.misp_client = misp_client
         self.repo = repo
         self.scorer = scorer
@@ -22,11 +22,7 @@ class EventProcessor:
         
         lookback_minutes = self.config.get("polling", {}).get("lookback_minutes", 10)
         
-        return self.misp_client.search(
-            controller="events",
-            timestamp=f"{lookback_minutes}m",
-            pythonify=False,
-        )
+        return self.misp_client.fetch_events(lookback_minutes)
 
     def has_event_changed(self, old_state: dict[str, Any] | None, new_state: dict[str, Any]) -> bool:
         if old_state is None:
