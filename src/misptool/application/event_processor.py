@@ -20,7 +20,7 @@ class EventProcessor:
 
     def fetch_events(self) -> list[dict[str, Any]]:
         
-        lookback_minutes = self.config.get("polling", {}).get("lookback_minutes", {})
+        lookback_minutes = self.config.get("polling", {}).get("lookback_minutes", 10)
         
         return self.misp_client.search(
             controller="events",
@@ -122,7 +122,6 @@ class EventProcessor:
         self,
     ) -> dict[str, int]:
 
-        misp_url = self.config.get("misp", {}).get("url", "")
         discord_user_to_ping = self.config.get("notifications", {}).get("discord_userid", "")
         events = self.fetch_events()
 
