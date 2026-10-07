@@ -16,6 +16,12 @@ notifications:
   discord_webhook: "YOUR_DISCORD_WEBHOOK"
   discord_userid: ""
 
+storage:
+  #"json" or "postgres", json is the default
+  backend: 
+  # need to export db url to env variable, default name: MISP_DB_URL
+  database_url_env: "YOUR_DB_ENV_VARIABLE"
+
 scoring:
   min_score: 4
 

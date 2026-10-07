@@ -5,25 +5,24 @@ from sqlalchemy.orm import sessionmaker
 
 
 class DbSession:
-
-    def __init__(self):
+    def __init__(self, database_url_env: str = "MISP_DB_URL"):
+        self.database_url_env = database_url_env
         self._database_url = None
         self._engine = None
+
+    @property
+    def database_url(self) -> str:
+        if self._database_url is None:
+            self._database_url = os.environ.get(self.database_url_env)
+        if not self._database_url:
+            raise RuntimeError(f"{self.database_url_env} environment variable is not set")
+        return self._database_url
     
     @property
     def engine(self):
         if self._engine is None:
             self._engine = self.__get_engine()
         return self._engine
-    
-    @property
-    def database_url(self) -> str:
-        if self._database_url is None:
-            self._database_url = os.environ.get("MISP_DB_URL")
-        if not self._database_url:
-            raise RuntimeError("MISP_DB_URL environment variable is not set")
-        return self._database_url
-
 
     def __get_engine(self):
         return create_engine(self.database_url)

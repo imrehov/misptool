@@ -4,12 +4,17 @@ from src.misptool.domain.scorer import Scorer
 from src.misptool.infrastructure.filesystem.storage import Storage
 from src.misptool.application.event_processor import EventProcessor
 from src.misptool.config import Config
+from src.misptool.application.ports import EventStateRepository
 
 from scripts.galaxy_importer import import_cluster_from_file, import_clusters_from_folder
 from scripts.galaxy_admin import list_galaxies, create_galaxy, ensure_galaxy
 
 from datetime import datetime
 from rich.pretty import pprint
+from contextlib import contextmanager
+from typing import Iterator
+
+
 
 class CliCommands:
     def __init__(self, config_path: str):
@@ -22,6 +27,28 @@ class CliCommands:
             self._config = Config(self.config_path)
         return self._config
 
+    @contextmanager
+    def event_state_repository(self) -> Iterator[EventStateRepository]:
+        storage_cfg = self.config.get("storage", {})
+        backend = storage_cfg.get("backend", "json")
+
+        if backend == "postgres":
+            from src.misptool.infrastructure.db.session import DbSession
+            from src.misptool.infrastructure.db.repositories import PostgresEventStateRepository
+
+            database_url_env = storage_cfg.get("database_url_env", "MISP_DB_URL")
+            db = DbSession(database_url_env=database_url_env)
+
+            with db.session() as session:
+                yield PostgresEventStateRepository(session)
+            return
+
+        if backend == "json":
+            yield Storage()
+            return
+
+        raise ValueError(f"Unsupported storage backend: {backend}")
+
     def now_str(self) -> str:
         return datetime.now().strftime("%Y-%m-%d %H:%M:%S")
     
@@ -30,10 +57,10 @@ class CliCommands:
 
         return MispClient(self.config)
 
-    def build_processor(self):
+    def build_processor(self, repo: EventStateRepository):
         return EventProcessor(
             misp_client=self.build_misp(),
-            repo=Storage(),
+            repo=repo,
             scorer=Scorer(self.config),
             notifier=Notifier(self.config),
             config=self.config,
@@ -41,7 +68,8 @@ class CliCommands:
 
     def run_once(self) -> None:
 
-        self.build_processor().process_events()
+        with self.event_state_repository() as repo:
+            self.build_processor(repo).process_events()
 
     def test_scorer(self) -> None:
         misp = self.build_misp()
@@ -195,7 +223,8 @@ class CliCommands:
 
         while True:
             try:
-                processor.process_events()
+                with self.event_state_repository() as repo:
+                    self.build_processor(repo).process_events()
             
             except Exception as e:
                 print("Error during run: ", e)
