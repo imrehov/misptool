@@ -20,6 +20,16 @@ def main() -> None:
     subparsers.add_parser("test-scorer", help="Test event scoring")
     subparsers.add_parser("run-once", help="Run one processing cycle")
     subparsers.add_parser("run", help="Run continuously")
+
+    migrate_state_parser = subparsers.add_parser(
+        "migrate-state",
+        help="Migrate local JSON state into PostgreSQL",
+    )
+    migrate_state_parser.add_argument(
+        "--input",
+        default="state.json",
+        help="Path to JSON state file",
+    )
     
     import_cluster_parser = subparsers.add_parser(
         "import-cluster",
@@ -105,6 +115,9 @@ def main() -> None:
 
     elif args.command == "run":
         CliCommands(args.config).run_loop()
+
+    elif args.command == "migrate-state":
+        CliCommands(args.config).migrate_state(args.input)
 
     elif args.command == "import-cluster":
         CliCommands(args.config).import_cluster(args.json_path)

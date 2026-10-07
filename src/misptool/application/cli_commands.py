@@ -15,7 +15,6 @@ from contextlib import contextmanager
 from typing import Iterator
 
 
-
 class CliCommands:
     def __init__(self, config_path: str):
         self.config_path = config_path
@@ -229,5 +228,29 @@ class CliCommands:
             
             time.sleep(interval_seconds)
 
+    def migrate_state(self, json_path: str = "state.json") -> None:
+        from src.misptool.infrastructure.db.models import Base
+        from src.misptool.infrastructure.db.repositories import PostgresEventStateRepository
+        from src.misptool.infrastructure.db.session import DbSession
+
+        source = Storage(json_path)
+
+        storage_cfg = self.config.get("storage", {})
+        database_url_env = storage_cfg.get("database_url_env", "MISP_DB_URL")
+        db = DbSession(database_url_env=database_url_env)
+
+        Base.metadata.create_all(db.engine)
+
+        with db.session() as session:
+            destination = PostgresEventStateRepository(session)
+
+            migrated_count = 0
+            for event_id, state in source.events.items():
+                destination.update_event_state(event_id, state)
+                migrated_count += 1
+
+            destination.save()
+
+        print(f"Migrated {migrated_count} event state(s) from {json_path} to PostgreSQL.")
 
     
