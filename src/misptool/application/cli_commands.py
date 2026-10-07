@@ -215,8 +215,6 @@ class CliCommands:
         interval_seconds = self.config.get("polling", {}).get("interval_seconds", 60)      
         lookback_minutes = self.config.get("polling", {}).get("lookback_minutes", 10)
         import time
-
-        processor = self.build_processor()
         
         print(f"[{self.now_str()}] - Starting loop. Polling every {interval_seconds} seconds.")
         print(f"[{self.now_str()}] - Fetching events from the last {lookback_minutes} minute(s).")
