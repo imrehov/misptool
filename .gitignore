@@ -33,7 +33,7 @@ config.yaml
 # =========================
 # Project runtime files
 # =========================
-*.json
+state.json
 
 # Logs 
 #*.log
@@ -79,3 +79,37 @@ AGENTS.md
 .agents/
 TODO.md
 .*
+
+####react
+# Logs
+logs
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+node_modules
+.vite/
+dist
+dist-ssr
+*.local
+frontend/src/.env
+frontend/src/.env.*
+!frontend/src/.env.example
+frontend/src/node_modules/
+frontend/src/dist/
+frontend/src/dist-ssr/
+frontend/src/.vite/
+
+# Editor directories and files
+.vscode/*
+!.vscode/extensions.json
+.idea
+.DS_Store
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
