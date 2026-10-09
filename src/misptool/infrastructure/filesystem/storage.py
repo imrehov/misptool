@@ -38,5 +38,10 @@ class Storage:
     def update_event_state(self, event_id: str, state: dict[str, Any]) -> None:
         self.events[str(event_id)] = state
 
+    def list_event_states(self, limit: int = 50) -> list[dict[str, Any]]:
+        event_ids = sorted(self.events.keys(), reverse=True)
+
+        return [self.events[event_id] for event_id in event_ids[:limit]]
+
     def delete_event_state(self, event_id: str) -> None:
         self.events.pop(str(event_id), None)

@@ -1,5 +1,6 @@
 from typing import Any
 
+from sqlalchemy import desc, select
 from sqlalchemy.orm import Session
 
 from src.misptool.infrastructure.db.models import EventState
@@ -15,6 +16,9 @@ class PostgresEventStateRepository:
         if row is None:
             return None
 
+        return self._row_to_dict(row)
+
+    def _row_to_dict(self, row: EventState) -> dict[str, Any]:
         return {
             "event_id": row.event_id,
             "info": row.info,
@@ -55,3 +59,14 @@ class PostgresEventStateRepository:
 
     def save(self) -> None:
         self.session.commit()
+
+    def list_event_states(self, limit: int = 50) -> list[dict[str, Any]]:
+        statement = (
+            select(EventState)
+            .order_by(desc(EventState.event_id))
+            .limit(limit)
+        )
+
+        rows = self.session.scalars(statement).all()
+
+        return [self._row_to_dict(row) for row in rows]

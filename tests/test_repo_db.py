@@ -40,9 +40,11 @@ def test_postgres_event_state_repository_round_trip():
     with db.session() as session:
         repo = PostgresEventStateRepository(session)
         state = repo.get_event_state("42")
+        states = repo.list_event_states()
 
     assert state is not None
     assert state["event_id"] == "42"
     assert state["info"] == "test event"
     assert state["score"] == 5
     assert state["fingerprint"] == "abc123"
+    assert any(item["event_id"] == "42" for item in states)

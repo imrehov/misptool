@@ -9,6 +9,9 @@ class EventStateRepository(Protocol):
     def update_event_state(self, event_id: str, state: dict[str, Any]) -> None:
         ...
 
+    def list_event_states(self, limit: int = 50) -> list[dict[str, Any]]:
+        ...
+
     def save(self) -> None:
         ...
 
