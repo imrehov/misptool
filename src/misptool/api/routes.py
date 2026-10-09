@@ -2,6 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException
 
 from src.misptool.api.dependencies import get_event_state_repo
 from src.misptool.application.ports import EventStateRepository
+from src.misptool.api.schemas import EventStateResponse
 
 
 router = APIRouter()
@@ -12,7 +13,8 @@ def health() -> dict[str, str]:
     return {"status": "ok"}
 
 
-@router.get("/events")
+@router.get("/events",
+response_model=list[EventStateResponse])
 def list_events(
     repo: EventStateRepository = Depends(get_event_state_repo),
     limit: int = 50,
@@ -20,7 +22,8 @@ def list_events(
     return repo.list_event_states(limit)
 
 
-@router.get("/events/{event_id}")
+@router.get("/events/{event_id}",
+response_model=EventStateResponse)
 def get_event_by_id(
     event_id: str,
     repo: EventStateRepository = Depends(get_event_state_repo),
