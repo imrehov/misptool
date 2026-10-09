@@ -24,7 +24,7 @@ def list_events(
 def get_event_by_id(
     event_id: str,
     repo: EventStateRepository = Depends(get_event_state_repo),
-) -> dict | None:
+) -> dict:
     result = repo.get_event_state(event_id)
 
     if result is None:
