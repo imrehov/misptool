@@ -3,6 +3,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from src.misptool.api.dependencies import get_event_state_repo
 from src.misptool.application.ports import EventStateRepository
 from src.misptool.api.schemas import EventStateResponse
+from src.misptool.application.filters import EventStateFilters
 
 
 router = APIRouter()
@@ -16,10 +17,21 @@ def health() -> dict[str, str]:
 @router.get("/events",
 response_model=list[EventStateResponse])
 def list_events(
-    repo: EventStateRepository = Depends(get_event_state_repo),
     limit: int = 50,
+    min_score: int | None = None,
+    from_date: str | None = None,
+    to_date: str | None = None,
+    published: bool | None = None,
+    repo: EventStateRepository = Depends(get_event_state_repo),
 ) -> list[dict]:
-    return repo.list_event_states(limit)
+    filters = EventStateFilters(
+        limit=limit,
+        min_score=min_score,
+        from_date=from_date,
+        to_date=to_date,
+        published=published,
+    )
+    return repo.list_event_states(filters)
 
 
 @router.get("/events/{event_id}",

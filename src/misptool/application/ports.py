@@ -1,6 +1,8 @@
 # src/misptool/application/ports.py
 from typing import Any, Protocol
 
+from src.misptool.application.filters import EventStateFilters
+
 
 class EventStateRepository(Protocol):
     def get_event_state(self, event_id: str) -> dict[str, Any] | None:
@@ -9,7 +11,7 @@ class EventStateRepository(Protocol):
     def update_event_state(self, event_id: str, state: dict[str, Any]) -> None:
         ...
 
-    def list_event_states(self, limit: int = 50) -> list[dict[str, Any]]:
+    def list_event_states(self, filters: EventStateFilters) -> list[dict[str, Any]]:
         ...
 
     def save(self) -> None:

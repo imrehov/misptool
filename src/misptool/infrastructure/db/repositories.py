@@ -4,6 +4,7 @@ from sqlalchemy import desc, select
 from sqlalchemy.orm import Session
 
 from src.misptool.infrastructure.db.models import EventState
+from src.misptool.application.filters import EventStateFilters
 
 
 class PostgresEventStateRepository:
@@ -60,12 +61,22 @@ class PostgresEventStateRepository:
     def save(self) -> None:
         self.session.commit()
 
-    def list_event_states(self, limit: int = 50) -> list[dict[str, Any]]:
-        statement = (
-            select(EventState)
-            .order_by(desc(EventState.event_id))
-            .limit(limit)
-        )
+    def list_event_states(self, filters: EventStateFilters) -> list[dict[str, Any]]:
+        statement = select(EventState)
+
+        if filters.min_score is not None:
+            statement = statement.where(EventState.score >= filters.min_score)
+
+        if filters.published is not None:
+            statement = statement.where(EventState.published == filters.published)
+
+        if filters.from_date is not None:
+            statement = statement.where(EventState.date >= filters.from_date)
+
+        if filters.to_date is not None:
+            statement = statement.where(EventState.date <= filters.to_date)
+
+        statement = statement.limit(filters.limit)
 
         rows = self.session.scalars(statement).all()
 

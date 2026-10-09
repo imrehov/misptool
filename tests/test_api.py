@@ -1,6 +1,7 @@
 import pytest
 from fastapi import HTTPException
 
+from src.misptool.application.filters import EventStateFilters
 from src.misptool.api.schemas import EventStateResponse
 from src.misptool.api.routes import get_event_by_id, health, list_events
 
@@ -34,8 +35,34 @@ class FakeEventStateRepository:
     def get_event_state(self, event_id: str) -> dict | None:
         return self.events.get(event_id)
 
-    def list_event_states(self, limit: int = 50) -> list[dict]:
-        return list(self.events.values())[:limit]
+    def list_event_states(self, filters: EventStateFilters) -> list[dict]:
+        events = list(self.events.values())
+
+        if filters.min_score is not None:
+            events = [
+                event for event in events
+                if event["score"] >= filters.min_score
+            ]
+
+        if filters.published is not None:
+            events = [
+                event for event in events
+                if event["published"] == filters.published
+            ]
+
+        if filters.from_date is not None:
+            events = [
+                event for event in events
+                if event["date"] >= filters.from_date
+            ]
+
+        if filters.to_date is not None:
+            events = [
+                event for event in events
+                if event["date"] <= filters.to_date
+            ]
+
+        return events[:filters.limit]
 
     def update_event_state(self, event_id: str, state: dict) -> None:
         self.events[event_id] = state
@@ -56,6 +83,16 @@ def test_list_events_returns_fake_events():
     assert result == [
         fake_event("123", "fake event 123", 7),
         fake_event("456", "fake event 456", 4),
+    ]
+
+
+def test_list_events_applies_query_filters():
+    repo = FakeEventStateRepository()
+
+    result = list_events(repo=repo, min_score=5, limit=10)
+
+    assert result == [
+        fake_event("123", "fake event 123", 7),
     ]
 
 
