@@ -13,4 +13,5 @@ export type EventState = {
   object_count: number
   score: number
   fingerprint: string
+  misp_event_url: string
 }

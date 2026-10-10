@@ -3,6 +3,7 @@ from collections.abc import Iterator
 from src.misptool.application.ports import EventStateRepository
 from src.misptool.infrastructure.db.repositories import PostgresEventStateRepository
 from src.misptool.infrastructure.db.session import DbSession
+from src.misptool.config import Config
 
 
 def get_event_state_repo() -> Iterator[EventStateRepository]:
@@ -10,3 +11,6 @@ def get_event_state_repo() -> Iterator[EventStateRepository]:
 
     with db.session() as session:
         yield PostgresEventStateRepository(session)
+
+def get_config() -> Config:
+    return Config("config.yaml")

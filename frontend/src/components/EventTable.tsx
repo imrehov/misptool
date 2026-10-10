@@ -4,12 +4,6 @@ type EventTableProps = {
   events: EventState[]
 }
 
-const MISP_BASE_URL = import.meta.env.VITE_MISP_BASE_URL ?? 'http://localhost'
-
-function buildMispEventUrl(eventId: string): string {
-  return `${MISP_BASE_URL.replace(/\/$/, '')}/events/view/${eventId}`
-}
-
 function scoreClassName(score: number): string {
   if (score >= 8) {
     return 'score score-critical'
@@ -81,7 +75,7 @@ export function EventTable({ events }: EventTableProps) {
               </td>
               <td>
                 <div className="link-list">
-                  <a href={buildMispEventUrl(event.event_id)} rel="noreferrer" target="_blank">
+                  <a href={event.misp_event_url} rel="noreferrer" target="_blank">
                     Open in MISP
                   </a>
                   <a href={`/events/${event.event_id}`}>Details later</a>

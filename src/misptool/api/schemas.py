@@ -15,3 +15,4 @@ class EventStateResponse(BaseModel):
     object_count: int
     score: int
     fingerprint: str
+    misp_event_url: str

@@ -6,6 +6,13 @@ from src.misptool.api.schemas import EventStateResponse
 from src.misptool.api.routes import get_event_by_id, health, list_events
 
 
+FAKE_CONFIG = {
+    "misp": {
+        "url": "https://misp.example",
+    },
+}
+
+
 def fake_event(event_id: str, info: str, score: int) -> dict:
     return {
         "event_id": event_id,
@@ -22,6 +29,13 @@ def fake_event(event_id: str, info: str, score: int) -> dict:
         "object_count": 3,
         "score": score,
         "fingerprint": f"fingerprint-{event_id}",
+    }
+
+
+def presented_fake_event(event_id: str, info: str, score: int) -> dict:
+    return {
+        **fake_event(event_id, info, score),
+        "misp_event_url": f"https://misp.example/events/view/{event_id}",
     }
 
 
@@ -78,37 +92,37 @@ def test_health_returns_ok():
 def test_list_events_returns_fake_events():
     repo = FakeEventStateRepository()
 
-    result = list_events(repo=repo)
+    result = list_events(repo=repo, config=FAKE_CONFIG)
 
     assert result == [
-        fake_event("123", "fake event 123", 7),
-        fake_event("456", "fake event 456", 4),
+        presented_fake_event("123", "fake event 123", 7),
+        presented_fake_event("456", "fake event 456", 4),
     ]
 
 
 def test_list_events_applies_query_filters():
     repo = FakeEventStateRepository()
 
-    result = list_events(repo=repo, min_score=5, limit=10)
+    result = list_events(repo=repo, config=FAKE_CONFIG, min_score=5, limit=10)
 
     assert result == [
-        fake_event("123", "fake event 123", 7),
+        presented_fake_event("123", "fake event 123", 7),
     ]
 
 
 def test_get_event_by_id_returns_fake_event():
     repo = FakeEventStateRepository()
 
-    result = get_event_by_id(event_id="123", repo=repo)
+    result = get_event_by_id(event_id="123", repo=repo, config=FAKE_CONFIG)
 
-    assert result == fake_event("123", "fake event 123", 7)
+    assert result == presented_fake_event("123", "fake event 123", 7)
 
 
 def test_get_event_by_id_returns_404_for_missing_event():
     repo = FakeEventStateRepository()
 
     with pytest.raises(HTTPException) as error:
-        get_event_by_id(event_id="missing", repo=repo)
+        get_event_by_id(event_id="missing", repo=repo, config=FAKE_CONFIG)
 
     assert error.value.status_code == 404
     assert error.value.detail == "wrong event id: missing"
@@ -117,7 +131,7 @@ def test_get_event_by_id_returns_404_for_missing_event():
 def test_list_events_response_shape_matches_schema():
     repo = FakeEventStateRepository()
 
-    result = list_events(repo=repo)
+    result = list_events(repo=repo, config=FAKE_CONFIG)
     validated_events = [EventStateResponse.model_validate(event) for event in result]
 
     assert len(validated_events) == 2
@@ -130,10 +144,11 @@ def test_list_events_response_shape_matches_schema():
 def test_get_event_by_id_response_shape_matches_schema():
     repo = FakeEventStateRepository()
 
-    result = get_event_by_id(event_id="123", repo=repo)
+    result = get_event_by_id(event_id="123", repo=repo, config=FAKE_CONFIG)
     validated_event = EventStateResponse.model_validate(result)
 
     assert validated_event.event_id == "123"
     assert validated_event.info == "fake event 123"
     assert validated_event.score == 7
     assert validated_event.fingerprint == "fingerprint-123"
+    assert validated_event.misp_event_url == "https://misp.example/events/view/123"
