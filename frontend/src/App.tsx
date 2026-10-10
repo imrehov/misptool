@@ -9,6 +9,17 @@ import './App.css'
 
 const AUTO_REFRESH_INTERVAL_MS = 60_000
 const AUTO_REFRESH_INTERVAL_SECONDS = AUTO_REFRESH_INTERVAL_MS / 1000
+type Theme = 'light' | 'dark'
+
+function getInitialTheme(): Theme {
+  const savedTheme = window.localStorage.getItem('theme')
+
+  if (savedTheme === 'light' || savedTheme === 'dark') {
+    return savedTheme
+  }
+
+  return 'light'
+}
 
 function App() {
   const [events, setEvents] = useState<EventState[]>([])
@@ -18,6 +29,7 @@ function App() {
     AUTO_REFRESH_INTERVAL_SECONDS,
   )
   const [error, setError] = useState<string | null>(null)
+  const [theme, setTheme] = useState<Theme>(getInitialTheme)
 
   const loadEvents = useCallback(async ({ showInitialLoading = false } = {}) => {
     if (showInitialLoading) {
@@ -43,6 +55,11 @@ function App() {
   useEffect(() => {
     loadEvents({ showInitialLoading: true })
   }, [loadEvents])
+
+  useEffect(() => {
+    document.documentElement.dataset.theme = theme
+    window.localStorage.setItem('theme', theme)
+  }, [theme])
 
   useEffect(() => {
     const refreshIntervalId = window.setInterval(() => {
@@ -90,6 +107,15 @@ function App() {
             type="button"
           >
             {isRefreshing ? 'Refreshing...' : 'Refresh'}
+          </button>
+          <button
+            aria-label={`Switch to ${theme === 'light' ? 'dark' : 'light'} theme`}
+            className="theme-toggle"
+            onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}
+            title={`Switch to ${theme === 'light' ? 'dark' : 'light'} theme`}
+            type="button"
+          >
+            {theme === 'light' ? '🌙' : '☀️'}
           </button>
         </div>
       </header>
