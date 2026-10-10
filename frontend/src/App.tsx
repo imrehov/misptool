@@ -7,6 +7,8 @@ import { EventTable } from './components/EventTable'
 import type { EventState } from './types/event'
 import './App.css'
 
+const AUTO_REFRESH_INTERVAL_MS = 60_000
+
 function App() {
   const [events, setEvents] = useState<EventState[]>([])
   const [isLoading, setIsLoading] = useState(true)
@@ -37,12 +39,18 @@ function App() {
     loadEvents({ showInitialLoading: true })
   }, [loadEvents])
 
+  useEffect(() => {
+    const refreshIntervalId = window.setInterval(() => {
+      loadEvents()
+    }, AUTO_REFRESH_INTERVAL_MS)
+
+    return () => {
+      window.clearInterval(refreshIntervalId)
+    }
+  }, [loadEvents])
+
   if (isLoading) {
     return <p>Loading events...</p>
-  }
-
-  if (error !== null) {
-    return <p>{error}</p>
   }
 
   return (
