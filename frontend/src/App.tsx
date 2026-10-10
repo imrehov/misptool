@@ -3,7 +3,9 @@
 import { useEffect, useState } from 'react'
 
 import { fetchEvents } from './api/events'
+import { EventTable } from './components/EventTable'
 import type { EventState } from './types/event'
+import './App.css'
 
 function App() {
   const [events, setEvents] = useState<EventState[]>([])
@@ -34,34 +36,19 @@ function App() {
   }
 
   return (
-    <main>
-      <h1>MISP Events</h1>
+    <main className="app">
+      <header className="page-header">
+        <div>
+          <p className="eyebrow">Simple MISP UI</p>
+          <h1>Event triage</h1>
+        </div>
+        <p className="event-count">{events.length} event(s)</p>
+      </header>
 
       {events.length === 0 ? (
         <p>No events found.</p>
       ) : (
-        <table>
-          <thead>
-            <tr>
-              <th>Score</th>
-              <th>Date</th>
-              <th>Info</th>
-              <th>Published</th>
-              <th>Tags</th>
-            </tr>
-          </thead>
-          <tbody>
-            {events.map((event) => (
-              <tr key={event.event_id}>
-                <td>{event.score}</td>
-                <td>{event.date}</td>
-                <td>{event.info}</td>
-                <td>{event.published ? 'Yes' : 'No'}</td>
-                <td>{event.tag_names.join(', ')}</td>
-              </tr>
-            ))}
-          </tbody>
-        </table>
+        <EventTable events={events} />
       )}
     </main>
   )
