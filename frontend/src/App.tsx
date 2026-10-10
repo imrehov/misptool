@@ -8,11 +8,15 @@ import type { EventState } from './types/event'
 import './App.css'
 
 const AUTO_REFRESH_INTERVAL_MS = 60_000
+const AUTO_REFRESH_INTERVAL_SECONDS = AUTO_REFRESH_INTERVAL_MS / 1000
 
 function App() {
   const [events, setEvents] = useState<EventState[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [isRefreshing, setIsRefreshing] = useState(false)
+  const [secondsUntilRefresh, setSecondsUntilRefresh] = useState(
+    AUTO_REFRESH_INTERVAL_SECONDS,
+  )
   const [error, setError] = useState<string | null>(null)
 
   const loadEvents = useCallback(async ({ showInitialLoading = false } = {}) => {
@@ -27,6 +31,7 @@ function App() {
     try {
       const fetchedEvents = await fetchEvents()
       setEvents(fetchedEvents)
+      setSecondsUntilRefresh(AUTO_REFRESH_INTERVAL_SECONDS)
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed to fetch events')
     } finally {
@@ -44,8 +49,19 @@ function App() {
       loadEvents()
     }, AUTO_REFRESH_INTERVAL_MS)
 
+    const countdownIntervalId = window.setInterval(() => {
+      setSecondsUntilRefresh((currentSeconds) => {
+        if (currentSeconds <= 1) {
+          return AUTO_REFRESH_INTERVAL_SECONDS
+        }
+
+        return currentSeconds - 1
+      })
+    }, 1000)
+
     return () => {
       window.clearInterval(refreshIntervalId)
+      window.clearInterval(countdownIntervalId)
     }
   }, [loadEvents])
 
@@ -61,7 +77,12 @@ function App() {
           <h1>Event triage</h1>
         </div>
         <div className="header-actions">
-          <p className="event-count">{events.length} event(s)</p>
+          <div className="refresh-status">
+            <p className="event-count">{events.length} event(s)</p>
+            <p className="refresh-countdown">
+              Next auto refresh in {secondsUntilRefresh}s
+            </p>
+          </div>
           <button
             className="refresh-button"
             disabled={isRefreshing}

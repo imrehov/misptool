@@ -62,6 +62,10 @@ a:hover {
   gap: 14px;
 }
 
+.refresh-status {
+  text-align: right;
+}
+
 .refresh-button {
   background: #2457d6;
   border: 0;
@@ -71,6 +75,12 @@ a:hover {
   font: inherit;
   font-weight: 800;
   padding: 10px 16px;
+}
+
+.refresh-countdown {
+  color: #667085;
+  font-size: 13px;
+  margin: 4px 0 0;
 }
 
 .refresh-button:hover:not(:disabled) {
