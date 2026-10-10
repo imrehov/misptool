@@ -2,7 +2,7 @@
 
 import { useCallback, useEffect, useState } from 'react'
 
-import { fetchEvents } from './api/events'
+import { fetchEvent, fetchEvents } from './api/events'
 import { EventTable } from './components/EventTable'
 import type { EventState } from './types/event'
 import './App.css'
@@ -25,10 +25,14 @@ function App() {
   const [events, setEvents] = useState<EventState[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [isRefreshing, setIsRefreshing] = useState(false)
+  const [isDetailLoading, setIsDetailLoading] = useState(false)
   const [secondsUntilRefresh, setSecondsUntilRefresh] = useState(
     AUTO_REFRESH_INTERVAL_SECONDS,
   )
   const [error, setError] = useState<string | null>(null)
+  const [detailError, setDetailError] = useState<string | null>(null)
+  const [selectedEventId, setSelectedEventId] = useState<string | null>(null)
+  const [selectedEvent, setSelectedEvent] = useState<EventState | null>(null)
   const [theme, setTheme] = useState<Theme>(getInitialTheme)
 
   const loadEvents = useCallback(async ({ showInitialLoading = false } = {}) => {
@@ -51,6 +55,22 @@ function App() {
       setIsRefreshing(false)
     }
   }, [])
+
+  async function loadEventDetail(eventId: string) {
+    setSelectedEventId(eventId)
+    setSelectedEvent(null)
+    setIsDetailLoading(true)
+    setDetailError(null)
+
+    try {
+      const event = await fetchEvent(eventId)
+      setSelectedEvent(event)
+    } catch (err) {
+      setDetailError(err instanceof Error ? err.message : 'Failed to fetch event detail')
+    } finally {
+      setIsDetailLoading(false)
+    }
+  }
 
   useEffect(() => {
     loadEvents({ showInitialLoading: true })
@@ -121,11 +141,22 @@ function App() {
       </header>
 
       {error !== null && <p className="error-message">{error}</p>}
+      {detailError !== null && <p className="error-message">{detailError}</p>}
 
       {events.length === 0 ? (
         <p>No events found.</p>
       ) : (
-        <EventTable events={events} />
+        <EventTable
+          events={events}
+          isDetailLoading={isDetailLoading}
+          onCloseDetail={() => {
+            setSelectedEvent(null)
+            setSelectedEventId(null)
+          }}
+          onSelectEvent={loadEventDetail}
+          selectedEvent={selectedEvent}
+          selectedEventId={selectedEventId}
+        />
       )}
     </main>
   )

@@ -11,3 +11,13 @@ export async function fetchEvents(): Promise<EventState[]> {
 
   return response.json()
 }
+
+export async function fetchEvent(event_id: string): Promise<EventState> {
+  const response = await fetch(`${API_BASE_URL}/events/${event_id}`)
+
+  if (!response.ok) {
+    throw new Error(`Failed to fetch event ${event_id}: ${response.status}`)
+  }
+
+  return response.json()
+}
