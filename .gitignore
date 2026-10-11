@@ -25,6 +25,7 @@ ENV/
 # =========================
 .env
 .env.*
+!.env.example
 config.yaml
 
 # (optional) keep example config instead
@@ -79,6 +80,9 @@ AGENTS.md
 .agents/
 TODO.md
 .*
+!.dockerignore
+!.env.example
+!frontend/.dockerignore
 
 ####react
 # Logs

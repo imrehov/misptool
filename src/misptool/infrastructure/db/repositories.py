@@ -70,6 +70,7 @@ class PostgresEventStateRepository:
         )
         
         self.session.merge(event_state)
+        self.session.flush()
    
 
     def save(self) -> None:

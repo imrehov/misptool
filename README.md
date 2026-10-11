@@ -195,6 +195,89 @@ Build:
 npm run build
 ```
 
+## Docker Compose
+
+The containerized setup runs four services:
+
+```text
+postgres        PostgreSQL database
+api             FastAPI backend
+worker          EventProcessor polling loop
+web             Built React frontend served by nginx
+```
+
+Copy the example environment file:
+
+```bash
+cp .env.example .env
+```
+
+Edit `.env` and choose a real PostgreSQL password. If you change the password,
+keep `POSTGRES_PASSWORD` and `MISP_DB_URL` in sync.
+
+Make sure `config.yaml` exists:
+
+```bash
+cp config.example.yaml config.yaml
+```
+
+For Docker Compose, `config.yaml` should use PostgreSQL storage:
+
+```yaml
+storage:
+  backend: "postgres"
+  database_url_env: "MISP_DB_URL"
+```
+
+If MISP is running directly on your host machine, containers usually cannot use
+`http://localhost` to reach it. Use this in `config.yaml` instead:
+
+```yaml
+misp:
+  url: "http://host.docker.internal"
+```
+
+Build the containers:
+
+```bash
+docker compose build
+```
+
+Run database migrations:
+
+```bash
+docker compose run --rm api alembic upgrade head
+```
+
+Start everything:
+
+```bash
+docker compose up -d
+```
+
+Open the app:
+
+```text
+http://localhost:8080
+```
+
+Useful commands:
+
+```bash
+docker compose logs -f worker
+docker compose logs -f api
+docker compose ps
+docker compose down
+```
+
+The frontend container proxies API calls through nginx:
+
+```text
+Browser -> http://localhost:8080/api -> api:8000 inside Docker
+```
+
+That means the browser does not need to call the API container directly.
+
 ## Tests
 
 Run Python tests:
@@ -238,4 +321,3 @@ Optional fields can include:
 - `authors`
 - `distribution`
 - `GalaxyElement`
-
