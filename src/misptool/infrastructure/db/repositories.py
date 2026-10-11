@@ -1,9 +1,10 @@
+from datetime import datetime, timezone
 from typing import Any
 
 from sqlalchemy import desc, select
 from sqlalchemy.orm import Session
 
-from src.misptool.infrastructure.db.models import EventState
+from src.misptool.infrastructure.db.models import EventState, EventChange
 from src.misptool.application.filters import EventStateFilters
 
 
@@ -35,6 +36,19 @@ class PostgresEventStateRepository:
             "object_count": row.object_count,
             "score": row.score,
             "fingerprint": row.fingerprint,
+        }
+
+    def _change_row_to_dict(self, row: EventChange) -> dict[str, Any]:
+        return {
+            "id": row.id,
+            "event_id": row.event_id,
+            "change_type": row.change_type,
+            "old_fingerprint": row.old_fingerprint,
+            "new_fingerprint": row.new_fingerprint,
+            "old_score": row.old_score,
+            "new_score": row.new_score,
+            "change_summary": row.change_summary,
+            "observed_at": row.observed_at,
         }
 
     def update_event_state(self, event_id: str, state: dict[str, Any]) -> None:
@@ -81,3 +95,38 @@ class PostgresEventStateRepository:
         rows = self.session.scalars(statement).all()
 
         return [self._row_to_dict(row) for row in rows]
+
+    def record_event_change(
+        self,
+        event_id: str,
+        change_type: str,
+        old_state: dict | None,
+        new_state: dict,
+        change_summary: list[str],
+    ) -> None:
+        event_change = EventChange(
+            event_id=str(event_id),
+            change_type=change_type,
+            old_fingerprint=None if old_state is None else old_state.get("fingerprint"),
+            new_fingerprint=new_state["fingerprint"],
+            old_score=None if old_state is None else old_state.get("score"),
+            new_score=new_state["score"],
+            change_summary=change_summary,
+            observed_at=datetime.now(timezone.utc).isoformat(),
+        )
+
+        self.session.add(event_change)
+
+    def list_event_changes(
+        self,
+        event_id: str,
+    ) -> list[dict[str, Any]]:
+        statement = (
+            select(EventChange)
+            .where(EventChange.event_id == str(event_id))
+            .order_by(desc(EventChange.id))
+        )
+
+        rows = self.session.scalars(statement).all()
+
+        return [self._change_row_to_dict(row) for row in rows]

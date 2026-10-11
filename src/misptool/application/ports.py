@@ -27,7 +27,7 @@ class EventStateRepository(Protocol):
     ) -> None:
         ...
 
-    def list_event_changes(event_id: str) -> list[dict]:
+    def list_event_changes(self, event_id: str) -> list[dict[str, Any]]:
         ...
 
 class MispEventSource(Protocol):

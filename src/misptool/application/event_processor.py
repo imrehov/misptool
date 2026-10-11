@@ -180,6 +180,16 @@ class EventProcessor:
                 alerted_count += 1
 
             self.repo.update_event_state(event_id, new_state)
+            
+            # also save change into event_changes table
+
+            self.repo.record_event_change(
+                event_id=event_id,
+                change_type=reason,
+                old_state=old_state,
+                new_state=new_state,
+                change_summary=change_summary,
+            )
 
         self.repo.save()
 

@@ -70,6 +70,15 @@ def test_new_interesting_event_is_stored_and_alerted(tmp_path):
     assert saved_state is not None
     assert saved_state["event_id"] == "42"
     assert saved_state["score"] >= 1
+    changes = storage.list_event_changes("42")
+    assert len(changes) == 1
+    assert changes[0]["event_id"] == "42"
+    assert changes[0]["change_type"] == "new"
+    assert changes[0]["old_fingerprint"] is None
+    assert changes[0]["new_fingerprint"] == saved_state["fingerprint"]
+    assert changes[0]["old_score"] is None
+    assert changes[0]["new_score"] == saved_state["score"]
+    assert changes[0]["change_summary"] == ["new event"]
     assert len(notifier.console_messages) == 1
     assert notifier.console_messages[0]["change_reason"] == "new"
 
@@ -200,6 +209,11 @@ def test_enriched_event_alerts_with_enriched_reason(tmp_path):
     assert second_result["changed"] == 1
     assert second_result["alerted"] == 1
     assert saved_state["attribute_count"] == 1
+    changes = storage.list_event_changes("42")
+    assert len(changes) == 2
+    assert changes[0]["change_type"] == "new"
+    assert changes[1]["change_type"] == "enriched"
+    assert "attributes: 0 -> 1" in changes[1]["change_summary"]
     assert len(second_notifier.console_messages) == 1
     assert second_notifier.console_messages[0]["change_reason"] == "enriched"
     assert "attributes: 0 -> 1" in second_notifier.console_messages[0]["change_summary"]
