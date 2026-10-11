@@ -15,3 +15,15 @@ export type EventState = {
   fingerprint: string
   misp_event_url: string
 }
+
+export type EventChange = {
+  id?: number | null
+  event_id: string
+  change_type: string
+  old_fingerprint: string | null
+  new_fingerprint: string
+  old_score: number | null
+  new_score: number
+  change_summary: string[]
+  observed_at: string
+}

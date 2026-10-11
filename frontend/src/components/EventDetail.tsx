@@ -1,4 +1,5 @@
 import type { EventState } from '../types/event'
+import { EventChangeHistory } from './EventChangeHistory'
 
 type EventDetailProps = {
   event: EventState
@@ -75,6 +76,8 @@ export function EventDetail({ event }: EventDetailProps) {
         <h3>Galaxy tags</h3>
         <TagList tags={event.galaxy_tag_names} />
       </div>
+
+      <EventChangeHistory eventId={event.event_id} />
     </section>
   )
 }

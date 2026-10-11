@@ -278,6 +278,55 @@ a:hover {
   margin: 0 0 10px;
 }
 
+.change-history {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.change-history-item {
+  background: var(--table-head);
+  border: 1px solid var(--border-soft);
+  border-radius: 12px;
+  padding: 12px;
+}
+
+.change-history-meta {
+  align-items: center;
+  color: var(--muted);
+  display: flex;
+  flex-wrap: wrap;
+  font-size: 12px;
+  font-weight: 700;
+  gap: 10px;
+  margin-bottom: 8px;
+}
+
+.change-type {
+  background: var(--score-bg);
+  border-radius: 999px;
+  color: var(--score-text);
+  padding: 4px 8px;
+}
+
+.change-summary {
+  margin: 0;
+  padding-left: 20px;
+}
+
+.change-summary li {
+  margin: 4px 0;
+}
+
+.history-error {
+  color: var(--danger-text);
+  font-weight: 700;
+  margin: 0;
+}
+
 .filters-card {
   align-items: end;
   background: var(--panel);
