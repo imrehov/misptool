@@ -278,6 +278,48 @@ a:hover {
   margin: 0 0 10px;
 }
 
+.filters-card {
+  align-items: end;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  box-shadow: 0 10px 24px var(--shadow);
+  display: grid;
+  gap: 14px;
+  grid-template-columns: minmax(220px, 2fr) repeat(5, minmax(120px, 1fr)) auto;
+  margin-bottom: 24px;
+  padding: 16px;
+}
+
+.filters-card label {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.filters-card label span {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.filters-card input,
+.filters-card select {
+  background: var(--background);
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  color: var(--text);
+  font: inherit;
+  padding: 10px 12px;
+}
+
+.filter-actions {
+  display: flex;
+  gap: 10px;
+}
+
 .table-wrapper {
   background: var(--panel);
   border: 1px solid var(--border);
@@ -398,4 +440,14 @@ a:hover {
   flex-direction: column;
   gap: 8px;
   white-space: nowrap;
+}
+
+@media (max-width: 1200px) {
+  .filters-card {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .filter-actions {
+    align-self: end;
+  }
 }

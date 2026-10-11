@@ -1,8 +1,13 @@
 
 
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 
 import { fetchEvent, fetchEvents } from './api/events'
+import {
+  EventFilters,
+  type EventFilterFormState,
+  toApiFilters,
+} from './components/EventFilters'
 import { EventTable } from './components/EventTable'
 import type { EventState } from './types/event'
 import './App.css'
@@ -10,6 +15,15 @@ import './App.css'
 const AUTO_REFRESH_INTERVAL_MS = 60_000
 const AUTO_REFRESH_INTERVAL_SECONDS = AUTO_REFRESH_INTERVAL_MS / 1000
 type Theme = 'light' | 'dark'
+
+const DEFAULT_FILTERS: EventFilterFormState = {
+  fromDate: '',
+  limit: 50,
+  minScore: '',
+  published: 'all',
+  search: '',
+  toDate: '',
+}
 
 function getInitialTheme(): Theme {
   const savedTheme = window.localStorage.getItem('theme')
@@ -34,8 +48,17 @@ function App() {
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null)
   const [selectedEvent, setSelectedEvent] = useState<EventState | null>(null)
   const [theme, setTheme] = useState<Theme>(getInitialTheme)
+  const [draftFilters, setDraftFilters] = useState<EventFilterFormState>(DEFAULT_FILTERS)
+  const [appliedFilters, setAppliedFilters] = useState<EventFilterFormState>(DEFAULT_FILTERS)
 
-  const loadEvents = useCallback(async ({ showInitialLoading = false } = {}) => {
+  const loadEvents = useCallback(async (
+    options: {
+      filtersOverride?: EventFilterFormState
+      showInitialLoading?: boolean
+    } = {},
+  ) => {
+    const { filtersOverride, showInitialLoading = false } = options
+
     if (showInitialLoading) {
       setIsLoading(true)
     } else {
@@ -45,7 +68,7 @@ function App() {
     setError(null)
 
     try {
-      const fetchedEvents = await fetchEvents()
+      const fetchedEvents = await fetchEvents(toApiFilters(filtersOverride ?? appliedFilters))
       setEvents(fetchedEvents)
       setSecondsUntilRefresh(AUTO_REFRESH_INTERVAL_SECONDS)
     } catch (err) {
@@ -54,7 +77,26 @@ function App() {
       setIsLoading(false)
       setIsRefreshing(false)
     }
-  }, [])
+  }, [appliedFilters])
+
+  const displayedEvents = useMemo(() => {
+    const searchTerm = appliedFilters.search.trim().toLowerCase()
+
+    if (searchTerm === '') {
+      return events
+    }
+
+    return events.filter((event) => {
+      const searchableText = [
+        event.event_id,
+        event.info,
+        ...event.tag_names,
+        ...event.galaxy_tag_names,
+      ].join(' ').toLowerCase()
+
+      return searchableText.includes(searchTerm)
+    })
+  }, [events, appliedFilters.search])
 
   async function loadEventDetail(eventId: string) {
     setSelectedEventId(eventId)
@@ -115,7 +157,7 @@ function App() {
         </div>
         <div className="header-actions">
           <div className="refresh-status">
-            <p className="event-count">{events.length} event(s)</p>
+            <p className="event-count">{displayedEvents.length} event(s)</p>
             <p className="refresh-countdown">
               Next auto refresh in {secondsUntilRefresh}s
             </p>
@@ -143,11 +185,29 @@ function App() {
       {error !== null && <p className="error-message">{error}</p>}
       {detailError !== null && <p className="error-message">{detailError}</p>}
 
-      {events.length === 0 ? (
+      <EventFilters
+        filters={draftFilters}
+        onChange={setDraftFilters}
+        onReset={() => {
+          setDraftFilters(DEFAULT_FILTERS)
+          setAppliedFilters(DEFAULT_FILTERS)
+          setSelectedEvent(null)
+          setSelectedEventId(null)
+          loadEvents({ filtersOverride: DEFAULT_FILTERS })
+        }}
+        onSubmit={() => {
+          setAppliedFilters(draftFilters)
+          setSelectedEvent(null)
+          setSelectedEventId(null)
+          loadEvents({ filtersOverride: draftFilters })
+        }}
+      />
+
+      {displayedEvents.length === 0 ? (
         <p>No events found.</p>
       ) : (
         <EventTable
-          events={events}
+          events={displayedEvents}
           isDetailLoading={isDetailLoading}
           onCloseDetail={() => {
             setSelectedEvent(null)
