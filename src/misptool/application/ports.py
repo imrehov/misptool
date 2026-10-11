@@ -17,6 +17,19 @@ class EventStateRepository(Protocol):
     def save(self) -> None:
         ...
 
+    def record_event_change(
+        self,
+        event_id: str,
+        change_type: str,
+        old_state: dict | None,
+        new_state: dict,
+        change_summary: list[str],
+    ) -> None:
+        ...
+
+    def list_event_changes(event_id: str) -> list[dict]:
+        ...
+
 class MispEventSource(Protocol):
     def fetch_events(self, lookback_minutes: int) -> list[dict[str, Any]]:
         ...
