@@ -3,7 +3,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from src.misptool.api.dependencies import get_event_state_repo, get_config
 from src.misptool.api.presenters import present_event_state
 from src.misptool.application.ports import EventStateRepository
-from src.misptool.api.schemas import EventStateResponse
+from src.misptool.api.schemas import EventStateResponse, EventChangeResponse
 from src.misptool.application.filters import EventStateFilters
 from src.misptool.config import Config
 
@@ -53,3 +53,14 @@ def get_event_by_id(
     
     misp_url = config.get("misp", {}).get("url", "")
     return present_event_state(result, misp_url)
+
+
+@router.get("/events/{event_id}/changes",
+response_model=list[EventChangeResponse])
+def get_event_change(
+    event_id: str,
+    repo: EventStateRepository = Depends(get_event_state_repo),
+) -> list[dict]:
+    result = repo.list_event_changes(event_id)
+
+    return result

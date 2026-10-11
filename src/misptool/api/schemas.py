@@ -16,3 +16,14 @@ class EventStateResponse(BaseModel):
     score: int
     fingerprint: str
     misp_event_url: str
+
+class EventChangeResponse(BaseModel):
+    id: int | None = None
+    event_id: str
+    change_type: str
+    old_fingerprint: str | None
+    new_fingerprint: str
+    old_score: int | None
+    new_score: int
+    change_summary: list[str]
+    observed_at: str
