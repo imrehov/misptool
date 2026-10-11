@@ -59,5 +59,12 @@ services:
     depends_on:
       - api
 
+  tunnel:
+    image: cloudflare/cloudflared:latest
+    restart: unless-stopped
+    command: tunnel --no-autoupdate run --token ${CLOUDFLARE_TUNNEL_TOKEN}
+    depends_on:
+      - web
+
 volumes:
   postgres_data:
