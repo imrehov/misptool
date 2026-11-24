@@ -74,6 +74,7 @@ export function EventDetail({ event }: EventDetailProps) {
 
       <div className="detail-section">
         <h3>Galaxy tags</h3>
+        <p className="muted">Connector tags attached to this event or its attributes, including attributes inside objects.</p>
         <TagList tags={event.galaxy_tag_names} />
       </div>
 

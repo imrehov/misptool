@@ -39,9 +39,27 @@ class Scorer:
 
 
     def get_galaxy_tag_names(self, event: dict[str, Any]) -> list[str]:
-        return sorted(
-            [tag_name for tag_name in self.get_tag_names(event) if tag_name.startswith("misp-galaxy:")]
-        )
+        event = self.normalize_event(event)
+        names: set[str] = set()
+
+        def collect(node: dict[str, Any]) -> None:
+            names.update(
+                name for name in self.get_tag_names(node) if name.startswith("misp-galaxy:")
+            )
+            for galaxy in node.get("Galaxy", []) or []:
+                for cluster in galaxy.get("GalaxyCluster", []) or []:
+                    name = cluster.get("tag_name")
+                    if isinstance(name, str) and name.startswith("misp-galaxy:"):
+                        names.add(name)
+
+        collect(event)
+        for attribute in event.get("Attribute", []) or []:
+            collect(attribute)
+        for obj in event.get("Object", []) or []:
+            for attribute in obj.get("Attribute", []) or []:
+                collect(attribute)
+
+        return sorted(names)
 
 
     def count_galaxy_tags(self, event: dict[str, Any]) -> int:

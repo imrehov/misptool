@@ -60,7 +60,7 @@ export function EventTable({
             <th>Attributes</th>
             <th>Objects</th>
             <th>Tags</th>
-            <th>Galaxies</th>
+            <th>Galaxies (event and attributes)</th>
             <th>Links</th>
           </tr>
         </thead>

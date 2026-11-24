@@ -251,3 +251,31 @@ def test_no_events_returns_zero_counts_and_does_not_alert(tmp_path):
     assert storage.events == {}
     assert notifier.console_messages == []
     assert notifier.discord_messages == []
+
+
+def test_attribute_galaxy_change_is_persisted_and_alerted(tmp_path):
+    config = {"scoring": {"min_score": 1, "galaxy_tag_score": 3}}
+    event = {"id": "42", "Attribute": [{"type": "ip-dst", "value": "203.0.113.10"}]}
+    source = FakeMispClient([event])
+    path = str(tmp_path / "state.json")
+    storage = Storage(path)
+    notifier = FakeNotifier()
+    processor = EventProcessor(source, storage, Scorer(config), notifier, config)
+    processor.process_events()
+    old_fingerprint = storage.get_event_state("42")["fingerprint"]
+
+    connector = 'misp-galaxy:threat-actor="Anunak"'
+    event["Attribute"][0]["Galaxy"] = [{"GalaxyCluster": [{"tag_name": connector}]}]
+    result = processor.process_events()
+
+    reloaded = Storage(path)
+    state = reloaded.get_event_state("42")
+    assert result == {"fetched": 1, "changed": 1, "alerted": 1}
+    assert state["galaxy_tag_names"] == [connector]
+    assert state["score"] == 3
+    assert state["fingerprint"] != old_fingerprint
+    change = reloaded.list_event_changes("42")[-1]
+    assert change["change_type"] == "enriched"
+    assert f"galaxy added: {connector}" in change["change_summary"]
+    assert notifier.console_messages[0]["galaxy_tag_names"] == [connector]
+    assert processor.process_events()["changed"] == 0

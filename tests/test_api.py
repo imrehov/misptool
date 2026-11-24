@@ -24,7 +24,7 @@ def fake_event(event_id: str, info: str, score: int) -> dict:
         "threat_level_id": "2",
         "analysis": "1",
         "tag_names": ["tlp:white", "pytest"],
-        "galaxy_tag_names": ["threat-actor:test"],
+        "galaxy_tag_names": ['misp-galaxy:threat-actor="Anunak"'],
         "attribute_count": 12,
         "object_count": 3,
         "score": score,
@@ -139,6 +139,7 @@ def test_list_events_response_shape_matches_schema():
     assert validated_events[0].info == "fake event 123"
     assert validated_events[0].score == 7
     assert validated_events[0].tag_names == ["tlp:white", "pytest"]
+    assert validated_events[0].galaxy_tag_names == ['misp-galaxy:threat-actor="Anunak"']
 
 
 def test_get_event_by_id_response_shape_matches_schema():
@@ -152,3 +153,4 @@ def test_get_event_by_id_response_shape_matches_schema():
     assert validated_event.score == 7
     assert validated_event.fingerprint == "fingerprint-123"
     assert validated_event.misp_event_url == "https://misp.example/events/view/123"
+    assert validated_event.galaxy_tag_names == ['misp-galaxy:threat-actor="Anunak"']
