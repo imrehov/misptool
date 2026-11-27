@@ -13,9 +13,14 @@ The goal is to give blue-team users a simpler interface than the default MISP UI
 - Sends terminal and Discord webhook notifications.
 - Stores event state in either local JSON or PostgreSQL.
 - Exposes a FastAPI JSON API.
+- Protects the web UI and event API with a single shared password, Argon2id verification,
+  expiring sessions, and login throttling.
 - Provides a React/Vite frontend with:
   - event triage table
   - inline event detail expansion
+  - event search and filters
+  - event change history
+  - galaxy connector tags from events and attributes
   - manual refresh
   - 60-second auto-refresh
   - refresh countdown
@@ -39,7 +44,7 @@ Important directories:
 ```text
 src/misptool/
   api/                 FastAPI app, routes, schemas, response presenters
-  application/         Event processor, filters, ports/interfaces, CLI commands
+  application/         Event processor, authentication, filters, ports/interfaces, CLI commands
   domain/              Scoring and event snapshot logic
   infrastructure/      DB, filesystem, MISP, notification implementations
 
@@ -133,6 +138,18 @@ Migrate old JSON state into PostgreSQL:
 
 ## FastAPI backend
 
+The API requires PostgreSQL for event storage, sessions and throttling, even if you use JSON
+storage for the standalone CLI. Run migrations first, then follow
+[Shared-password access](#shared-password-access) to generate your password hash.
+
+For local HTTP development, export the generated hash value as `APP_PASSWORD_HASH`
+(keep it single-quoted), and set:
+
+```bash
+export AUTH_COOKIE_SECURE=false
+export AUTH_ALLOWED_ORIGINS='http://localhost:5173,http://localhost:8080,http://localhost:8000'
+```
+
 Start the API:
 
 ```bash
@@ -143,9 +160,18 @@ Useful endpoints:
 
 ```text
 GET /health
+POST /auth/login
+GET /auth/session
+POST /auth/logout
 GET /events
 GET /events/{event_id}
+GET /events/{event_id}/changes
 ```
+
+Only `/health` is public among these GET endpoints. Login accepts JSON containing only
+`password`; successful login, session checks and logout return HTTP 204. Event endpoints
+return HTTP 401 without a valid session. Authentication POST requests require
+`X-CSRF-Protection: 1`; the React frontend sends it automatically.
 
 Supported event query parameters:
 
@@ -163,13 +189,15 @@ Example:
 http://localhost:8000/events?min_score=5&published=true&limit=25
 ```
 
-FastAPI docs:
+FastAPI docs (the local origin configuration above also permits requests from Swagger UI):
 
 ```text
 http://localhost:8000/docs
 ```
 
 ## React frontend
+
+Start the configured API first. The frontend initially shows a shared-password login form.
 
 ```bash
 cd frontend
@@ -197,13 +225,14 @@ npm run build
 
 ## Docker Compose
 
-The containerized setup runs four services:
+The Compose file defines five services:
 
 ```text
 postgres        PostgreSQL database
 api             FastAPI backend
 worker          EventProcessor polling loop
 web             Built React frontend served by nginx
+tunnel          Cloudflare Tunnel for your configured domain
 ```
 
 Copy the example environment file:
@@ -214,6 +243,11 @@ cp .env.example .env
 
 Edit `.env` and choose a real PostgreSQL password. If you change the password,
 keep `POSTGRES_PASSWORD` and `MISP_DB_URL` in sync.
+
+Configure [shared-password access](#shared-password-access) before starting the app:
+generate `APP_PASSWORD_HASH`, and set `AUTH_ALLOWED_ORIGINS` to your exact browser origin.
+For `http://localhost:8080`, set `AUTH_COOKIE_SECURE=false`; for your public HTTPS domain,
+keep it `true`. Set `CLOUDFLARE_TUNNEL_TOKEN` if you will run the tunnel service.
 
 Make sure `config.yaml` exists:
 
@@ -249,7 +283,13 @@ Run database migrations:
 docker compose run --rm api alembic upgrade head
 ```
 
-Start everything:
+For local use without Cloudflare Tunnel, start the four application services:
+
+```bash
+docker compose up -d postgres api worker web
+```
+
+For deployment with your configured Cloudflare Tunnel, start all five services:
 
 ```bash
 docker compose up -d
