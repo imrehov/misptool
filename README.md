@@ -136,6 +136,45 @@ Migrate old JSON state into PostgreSQL:
 .venv/bin/python3 main.py --config config.yaml migrate-state --input state.json
 ```
 
+## Exporting events
+
+Export full events visible to your configured MISP API key:
+
+```bash
+.venv/bin/python main.py --config config.yaml export-events --output exports/full/events.json
+```
+
+Export only events modified within `polling.lookback_minutes`:
+
+```bash
+.venv/bin/python main.py --config config.yaml export-events --recent --output exports/recent/events.json
+```
+
+Include base64 attachment data in the JSON and also save the available files separately:
+
+```bash
+.venv/bin/python main.py --config config.yaml export-events --with-attachments --output exports/with-files/events.json
+```
+
+The exporter pages through MISP's event search API and saves a JSON list of event dictionaries,
+including attributes and objects. By default, attachment contents are not requested.
+Files from event attributes and object attributes are written to an `attachments/<event_id>/`
+directory beside the JSON file. Filenames are sanitized and numbered to keep duplicate names
+distinct. Malware samples remain in the archive format returned by MISP; nothing is extracted
+or executed. Attributes without inline file data are skipped; the command reports the file count.
+
+Existing attachment files are never overwritten. Use a fresh output directory when repeating
+an export with attachments. Invalid base64 data fails the export visibly; already written
+attachments may remain after a failure. API errors abort before replacing the JSON file,
+and JSON writes use an atomic replacement. The full export is held in memory, including any
+base64 file data, so allow enough RAM for large exports. Pagination is not a point-in-time
+snapshot if events change during the export.
+
+Without `--output`, JSON is saved to `exports-YYYY-MM-DD/events.json`. The standard export
+directories are ignored by Git and excluded from the Docker build context; keep any custom
+export location private as well. This command contacts MISP directly and does not require
+the web UI's shared password.
+
 ## FastAPI backend
 
 The API requires PostgreSQL for event storage, sessions and throttling, even if you use JSON

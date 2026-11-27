@@ -199,16 +199,19 @@ class CliCommands:
 
         if recent:
             lookback_minutes = self.config.get("polling", {}).get("lookback_minutes", 10)
-            events = fetch_recent_events(misp, lookback_minutes)
+            events = fetch_recent_events(misp, lookback_minutes, with_attachments=with_attachments)
         else:
-            events = fetch_all_events(misp)
+            events = fetch_all_events(misp, with_attachments=with_attachments)
 
         save_events_json(events, output)
         print(f"Exported {len(events)} event(s) to {output}")
 
         if with_attachments:
-            dump_inline_attachments(events, f"exports-{datetime.today()}/attachments")
-            print("Attachment dump completed.")
+            from pathlib import Path
+
+            attachments_dir = Path(output).parent / "attachments"
+            count = dump_inline_attachments(events, str(attachments_dir))
+            print(f"Exported {count} attachment(s) to {attachments_dir}")
 
     def run_loop(self) -> None:
         interval_seconds = self.config.get("polling", {}).get("interval_seconds", 60)      
