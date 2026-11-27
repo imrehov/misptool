@@ -1,6 +1,5 @@
 import type { EventChange, EventState } from '../types/event'
-
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8000'
+import { apiRequest } from './client'
 
 export type EventFilters = {
   fromDate?: string
@@ -34,33 +33,21 @@ export async function fetchEvents(filters: EventFilters = {}): Promise<EventStat
   }
 
   const queryString = queryParams.toString()
-  const url = queryString === '' ? `${API_BASE_URL}/events` : `${API_BASE_URL}/events?${queryString}`
+  const url = queryString === '' ? '/events' : `/events?${queryString}`
 
-  const response = await fetch(url)
-
-  if (!response.ok) {
-    throw new Error(`Failed to fetch events: ${response.status}`)
-  }
+  const response = await apiRequest(url)
 
   return response.json()
 }
 
 export async function fetchEvent(event_id: string): Promise<EventState> {
-  const response = await fetch(`${API_BASE_URL}/events/${event_id}`)
-
-  if (!response.ok) {
-    throw new Error(`Failed to fetch event ${event_id}: ${response.status}`)
-  }
+  const response = await apiRequest(`/events/${event_id}`)
 
   return response.json()
 }
 
 export async function fetchEventChanges(event_id: string): Promise<EventChange[]> {
-  const response = await fetch(`${API_BASE_URL}/events/${event_id}/changes`)
-
-  if (!response.ok) {
-    throw new Error(`Failed to fetch changes for event ${event_id}: ${response.status}`)
-  }
+  const response = await apiRequest(`/events/${event_id}/changes`)
 
   return response.json()
 }

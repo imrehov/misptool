@@ -280,6 +280,12 @@ That means the browser does not need to call the API container directly.
 
 ## Tests
 
+Install test dependencies:
+
+```bash
+.venv/bin/python3 -m pip install -r requirements-dev.txt
+```
+
 Run Python tests:
 
 ```bash
@@ -287,6 +293,7 @@ Run Python tests:
 ```
 
 Some PostgreSQL integration tests are skipped unless `MISP_DB_URL` is set.
+Authentication HTTP tests use an isolated in-memory database and never connect to your configured database.
 
 Run frontend checks:
 
@@ -294,6 +301,86 @@ Run frontend checks:
 cd frontend
 npm run build
 ```
+
+## Shared-password access
+
+Event lists, details and change history require the shared password. There are no accounts,
+usernames, registrations or invitation codes. The MISP worker and CLI
+continue running independently of browser logins. `/health` remains public.
+
+Generate a password hash locally (the password is entered privately, not as a command argument):
+
+```bash
+.venv/bin/python -m scripts.hash_password
+```
+
+The generator requires a 15–128 character password and prints a single-quoted
+`APP_PASSWORD_HASH='...'` line. Copy that line into `.env`; keep the single quotes so Compose
+preserves the dollar signs in the Argon2id hash. Share the password privately with colleagues.
+If you only have Docker installed, build first and use
+`docker compose run --rm --no-deps api python -m scripts.hash_password` instead.
+
+Set these variables in `.env` for Docker Compose (export them in your shell when running
+uvicorn directly; Python does not automatically load `.env`):
+
+```dotenv
+# Paste the generated, single-quoted APP_PASSWORD_HASH line here.
+AUTH_COOKIE_SECURE=true
+AUTH_ALLOWED_ORIGINS=https://your-domain.example
+```
+
+An empty, missing or invalid `APP_PASSWORD_HASH` blocks access. The plaintext password is
+not stored in the application database or configuration. Remove the old `INVITATION_CODE`
+setting if it exists; it is no longer used.
+
+Sessions expire after eight hours and are revoked immediately on logout. Only a SHA-256 hash
+of the random session token is stored in PostgreSQL; the browser receives an HttpOnly,
+SameSite=Lax cookie. Authentication POST requests require `X-CSRF-Protection: 1`; requests
+with an Origin header must match `AUTH_ALLOWED_ORIGINS` exactly. The React client sends
+this header and credentials automatically. API responses use `Cache-Control: no-store`.
+
+For local **HTTP** development only:
+
+```dotenv
+AUTH_COOKIE_SECURE=false
+AUTH_ALLOWED_ORIGINS=http://localhost:5173,http://localhost:8080
+```
+
+Use `localhost` consistently for the frontend and API during development. On your public
+Cloudflare domain keep `AUTH_COOKIE_SECURE=true`, use HTTPS, and include the exact domain
+in `AUTH_ALLOWED_ORIGINS`. Secure cookies cannot support login on a plain HTTP LAN address.
+
+Deploy the schema before starting the updated API:
+
+```bash
+docker compose build
+docker compose stop api
+docker compose run --rm api alembic upgrade head
+docker compose up -d
+```
+
+The migration removes old account records and invalidates all previous sessions. Event data
+and history are preserved. The previous migration remains in the migration chain so databases
+that already applied it can upgrade; downgrading cannot recover deleted accounts.
+
+To rotate the password, generate a new hash, replace `APP_PASSWORD_HASH` in `.env`, then run:
+
+```bash
+docker compose up -d --force-recreate api
+```
+
+Changing the configured hash invalidates every previous session, including sessions of people
+already logged in. A plain container restart does not load changed Compose environment values.
+There is no automatic daily rotation; repeat these steps when you want to change the password.
+
+Login attempts are limited across API processes using PostgreSQL: 30 per minute in total.
+Successful attempts also count. This small-team limit can temporarily block legitimate
+logins during repeated attempts. Invalid requests rejected by input/CSRF validation do not count.
+Expired throttle entries are removed during authentication attempts; expired sessions are
+removed when a new login creates a session, along with sessions for previous password hashes.
+
+Argon2id uses 64 MiB, three iterations and four lanes. Benchmark login on your deployment
+hardware before exposing it to users. Generate a new hash when changing hashing parameters.
 
 ## Galaxy cluster import
 

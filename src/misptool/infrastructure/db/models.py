@@ -1,9 +1,25 @@
-from sqlalchemy import Boolean, Integer, String, JSON, ForeignKey
+from sqlalchemy import BigInteger, Boolean, Integer, String, JSON, ForeignKey
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column
 
 
 class Base(DeclarativeBase):
     pass
+
+
+class AuthSession(Base):
+    __tablename__ = "auth_sessions"
+
+    token_hash: Mapped[str] = mapped_column(String(64), primary_key=True)
+    password_version: Mapped[str] = mapped_column(String(64), nullable=False)
+    expires_at: Mapped[int] = mapped_column(BigInteger, index=True)
+
+
+class AuthThrottle(Base):
+    __tablename__ = "auth_throttles"
+
+    key: Mapped[str] = mapped_column(String(80), primary_key=True)
+    attempts: Mapped[int] = mapped_column(Integer, nullable=False)
+    expires_at: Mapped[int] = mapped_column(BigInteger, index=True)
 
 
 class EventState(Base):

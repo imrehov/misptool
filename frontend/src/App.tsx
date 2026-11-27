@@ -3,6 +3,9 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 
 import { fetchEvent, fetchEvents } from './api/events'
+import { checkSession, logout } from './api/auth'
+import { ApiError } from './api/client'
+import { AuthForm } from './components/AuthForm'
 import {
   EventFilters,
   type EventFilterFormState,
@@ -36,6 +39,59 @@ function getInitialTheme(): Theme {
 }
 
 function App() {
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
+  const [isCheckingSession, setIsCheckingSession] = useState(true)
+  const [authError, setAuthError] = useState<string | null>(null)
+  const [theme, setTheme] = useState<Theme>(getInitialTheme)
+
+  useEffect(() => {
+    document.documentElement.dataset.theme = theme
+    window.localStorage.setItem('theme', theme)
+  }, [theme])
+
+  useEffect(() => {
+    let ignore = false
+    const expire = () => { setIsAuthenticated(false); setAuthError(null) }
+    window.addEventListener('auth-expired', expire)
+    checkSession().then(() => {
+      if (!ignore) setIsAuthenticated(true)
+    }).catch((err) => {
+      if (!ignore && !(err instanceof ApiError && err.status === 401)) {
+        setAuthError(err instanceof Error ? err.message : 'Unable to check session')
+      }
+    }).finally(() => { if (!ignore) setIsCheckingSession(false) })
+    return () => { ignore = true; window.removeEventListener('auth-expired', expire) }
+  }, [])
+
+  const themeToggle = <button
+    aria-label={`Switch to ${theme === 'light' ? 'dark' : 'light'} theme`}
+    className="theme-toggle" onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}
+    type="button">{theme === 'light' ? '🌙' : '☀️'}</button>
+
+  if (isCheckingSession) return <main className="app"><p>Checking session…</p></main>
+
+  if (!isAuthenticated) return (
+    <main className="app">
+      <header className="page-header"><p className="eyebrow">Simple MISP UI</p>{themeToggle}</header>
+      {authError && <p className="error-message" role="alert">{authError}</p>}
+      <AuthForm onLogin={() => { setAuthError(null); setIsAuthenticated(true) }} />
+    </main>
+  )
+
+  return <>
+    <div className="session-bar">
+      {themeToggle}
+      <button className="link-button" type="button" onClick={async () => {
+        try { await logout(); setIsAuthenticated(false); setAuthError(null) }
+        catch (err) { setAuthError(err instanceof Error ? err.message : 'Logout failed') }
+      }}>Log out</button>
+      {authError && <p className="error-message" role="alert">{authError}</p>}
+    </div>
+    <EventApp />
+  </>
+}
+
+function EventApp() {
   const [events, setEvents] = useState<EventState[]>([])
   const [isLoading, setIsLoading] = useState(true)
   const [isRefreshing, setIsRefreshing] = useState(false)
@@ -47,7 +103,6 @@ function App() {
   const [detailError, setDetailError] = useState<string | null>(null)
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null)
   const [selectedEvent, setSelectedEvent] = useState<EventState | null>(null)
-  const [theme, setTheme] = useState<Theme>(getInitialTheme)
   const [draftFilters, setDraftFilters] = useState<EventFilterFormState>(DEFAULT_FILTERS)
   const [appliedFilters, setAppliedFilters] = useState<EventFilterFormState>(DEFAULT_FILTERS)
 
@@ -119,11 +174,6 @@ function App() {
   }, [loadEvents])
 
   useEffect(() => {
-    document.documentElement.dataset.theme = theme
-    window.localStorage.setItem('theme', theme)
-  }, [theme])
-
-  useEffect(() => {
     const refreshIntervalId = window.setInterval(() => {
       loadEvents()
     }, AUTO_REFRESH_INTERVAL_MS)
@@ -169,15 +219,6 @@ function App() {
             type="button"
           >
             {isRefreshing ? 'Refreshing...' : 'Refresh'}
-          </button>
-          <button
-            aria-label={`Switch to ${theme === 'light' ? 'dark' : 'light'} theme`}
-            className="theme-toggle"
-            onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}
-            title={`Switch to ${theme === 'light' ? 'dark' : 'light'} theme`}
-            type="button"
-          >
-            {theme === 'light' ? '🌙' : '☀️'}
           </button>
         </div>
       </header>

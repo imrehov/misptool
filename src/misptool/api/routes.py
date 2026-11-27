@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException
 
-from src.misptool.api.dependencies import get_event_state_repo, get_config
+from src.misptool.api.dependencies import get_event_state_repo, get_config, require_session
 from src.misptool.api.presenters import present_event_state
 from src.misptool.application.ports import EventStateRepository
 from src.misptool.api.schemas import EventStateResponse, EventChangeResponse
@@ -17,7 +17,7 @@ def health() -> dict[str, str]:
 
 
 @router.get("/events",
-response_model=list[EventStateResponse])
+response_model=list[EventStateResponse], dependencies=[Depends(require_session)])
 def list_events(
     limit: int = 50,
     min_score: int | None = None,
@@ -40,7 +40,7 @@ def list_events(
 
 
 @router.get("/events/{event_id}",
-response_model=EventStateResponse)
+response_model=EventStateResponse, dependencies=[Depends(require_session)])
 def get_event_by_id(
     event_id: str,
     repo: EventStateRepository = Depends(get_event_state_repo),
@@ -56,7 +56,7 @@ def get_event_by_id(
 
 
 @router.get("/events/{event_id}/changes",
-response_model=list[EventChangeResponse])
+response_model=list[EventChangeResponse], dependencies=[Depends(require_session)])
 def get_event_change(
     event_id: str,
     repo: EventStateRepository = Depends(get_event_state_repo),

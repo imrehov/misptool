@@ -69,6 +69,40 @@ body {
   color: var(--text);
 }
 
+.auth-card {
+  max-width: 420px;
+  margin: 48px auto;
+  padding: 24px;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+}
+
+.auth-card form {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+
+.auth-card input {
+  padding: 10px;
+  color: var(--text);
+  background: var(--background);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font: inherit;
+}
+
+.session-bar {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 16px;
+  padding: 16px 32px 0;
+}
+
 a {
   color: var(--link);
   font-weight: 600;
